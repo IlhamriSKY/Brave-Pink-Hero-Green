@@ -5,7 +5,7 @@
     "uploadTitle": "Drop Your Image Here",
     "uploadDescription": "Drag and drop an image file, or click to browse",
     "uploadButton": "Choose Image",
-    "uploadFormats": "JPG, PNG, GIF, WebP (max 10MB)",
+    "uploadFormats": "JPG, PNG, WebP (max 10MB)",
     "processingTitle": "Processing Your Image",
     "processingDescription": "Applying conversion effects...",
     "resultTitle": "Result Comparison",
@@ -48,7 +48,7 @@
     "toggle": "Toggle Theme"
   },
   "errors": {
-    "fileTypeError": "Please select a valid image file (JPG, PNG, GIF, WebP)",
+    "fileTypeError": "Please select a valid image file (JPG, PNG, WebP)",
     "fileSizeError": "File size must be less than 10MB",
     "processingError": "Failed to process image. Please try again.",
     "genericError": "An error occurred. Please try again."

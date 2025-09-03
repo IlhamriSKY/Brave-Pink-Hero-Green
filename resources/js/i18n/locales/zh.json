@@ -5,7 +5,7 @@
     "uploadTitle": "将您的图像拖放到这里",
     "uploadDescription": "拖放图像文件，或点击浏览",
     "uploadButton": "选择图像",
-    "uploadFormats": "JPG、PNG、GIF、WebP（最大10MB）",
+    "uploadFormats": "JPG、PNG、WebP（最大10MB）",
     "processingTitle": "正在处理您的图像",
     "processingDescription": "正在应用转换效果...",
     "resultTitle": "结果比较",
@@ -45,7 +45,7 @@
     "toggle": "切换主题"
   },
   "errors": {
-    "fileTypeError": "请选择有效的图像文件（JPG、PNG、GIF、WebP）",
+    "fileTypeError": "请选择有效的图像文件（JPG、PNG、WebP）",
     "fileSizeError": "文件大小必须小于10MB",
     "processingError": "处理图像失败。请重试。",
     "genericError": "发生错误。请重试。"

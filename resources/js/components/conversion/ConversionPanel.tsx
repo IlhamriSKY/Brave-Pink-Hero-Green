@@ -277,7 +277,7 @@ export default function ConversionPanel({
                   </p>
                 </div>
                 <UploadButton
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.webp"
                   onFiles={handleFileSelect}
                   size="lg"
                   className="bg-primary hover:bg-primary/90"
@@ -405,6 +405,7 @@ export default function ConversionPanel({
           </CardContent>
         </Card>
       )}
+
 
       {/* Error Display */}
       {error && (

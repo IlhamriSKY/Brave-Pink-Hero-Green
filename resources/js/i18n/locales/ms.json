@@ -5,8 +5,8 @@
     "uploadTitle": "Muat Naik Imej Anda",
     "uploadDescription": "Seret dan lepaskan fail imej, atau klik untuk pilih",
     "uploadButton": "Pilih Imej",
-    "uploadFormats": "JPG, PNG, GIF, WebP (maks 10MB)",
-    "processingTitle": "Memproses Imej",
+    "uploadFormats": "JPG, PNG, WebP (maks 10MB)",
+    "processingTitle": "Memproses Imej Anda",
     "processingDescription": "Sedang menggunakan kesan penukaran...",
     "resultTitle": "Perbandingan Hasil",
     "resultDescription": "Gunakan gelongsor untuk membandingkan imej asal dan imej diproses",
@@ -48,7 +48,7 @@
     "toggle": "Tukar Tema"
   },
   "errors": {
-    "fileTypeError": "Sila pilih fail imej yang sah (JPG, PNG, GIF, WebP)",
+    "fileTypeError": "Sila pilih fail imej yang sah (JPG, PNG, WebP)",
     "fileSizeError": "Saiz fail mesti kurang daripada 10MB",
     "processingError": "Gagal memproses imej. Sila cuba lagi.",
     "genericError": "Ralat berlaku. Sila cuba lagi."
