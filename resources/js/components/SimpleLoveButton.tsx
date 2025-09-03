@@ -163,41 +163,45 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
 
     const setupPollingFallback = () => {
       debugLog('[Polling] Starting HTTP polling');
-      setConnectionStatus('connected'); // Show as connected for polling
+      setConnectionStatus('connected');
 
       // Clear any existing polling
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
 
-      // Poll for new events every 1 second
-      pollingIntervalRef.current = window.setInterval(async () => {
+      // Adaptive polling: fast for first 10s (400ms), then 1000ms
+      const start = Date.now();
+      const fastDuration = 10000;
+      const loop = async () => {
+        const elapsed = Date.now() - start;
+        const interval = elapsed < fastDuration ? 400 : 1000;
         try {
           const response = await fetch('/api/love/poll', {
-            headers: {
-              'X-Last-Event-Id': lastEventId.current,
-            }
+            headers: { 'X-Last-Event-Id': lastEventId.current },
           });
-
           if (response.ok) {
             const data = await response.json();
             if (data.events && data.events.length > 0) {
               debugLog(`[Polling] Received ${data.events.length} new events`);
-              data.events.forEach((event: any) => {
-                debugLog('[Polling] Processing love event:', event);
+              for (const event of data.events) {
                 lastEventId.current = event.id;
                 enqueueRemoteBurst();
-              });
+              }
             }
           } else {
             debugWarn('[Polling] HTTP request failed:', response.status);
           }
         } catch (error) {
           debugError('[Polling] Request error:', error);
+        } finally {
+          pollingIntervalRef.current = window.setTimeout(loop, interval) as unknown as number;
         }
-      }, 1000);
+      };
+      loop();
 
-      debugLog('[Polling] Started (1s interval)');
+      debugLog('[Polling] Started (adaptive)');
     };
 
     initializeConnection();
