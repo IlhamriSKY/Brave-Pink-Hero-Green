@@ -19,30 +19,17 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
   const lastEventId = useRef<string>('');
 
   // Helper function for conditional debugging
-  const debugLog = (message: string, ...args: any[]) => {
-    if (import.meta.env.VITE_WEBSOCKET_DEBUG === 'true') {
-      console.log(message, ...args);
-    }
-  };
-
-  const debugWarn = (message: string, ...args: any[]) => {
-    if (import.meta.env.VITE_WEBSOCKET_DEBUG === 'true') {
-      console.warn(message, ...args);
-    }
-  };
-
-  const debugError = (message: string, ...args: any[]) => {
-    if (import.meta.env.VITE_WEBSOCKET_DEBUG === 'true') {
-      console.error(message, ...args);
-    }
-  };
+  const debugEnabled = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true'
+  const debugLog = (message: string, ...args: any[]) => { if (debugEnabled) console.log(message, ...args) }
+  const debugWarn = (message: string, ...args: any[]) => { if (debugEnabled) console.warn(message, ...args) }
+  const debugError = (message: string, ...args: any[]) => { if (debugEnabled) console.error(message, ...args) }
 
   // Create Instagram Live-style floating heart particles
   const createParticles = useCallback(() => {
     const buttonRect = buttonRef.current?.getBoundingClientRect();
 
     if (!buttonRect) {
-      debugWarn('⚠️ [Animation] Button ref not available, using fallback position');
+      debugWarn('[Love] Button ref not available, using fallback position');
       // Fallback: use fixed position if button ref not available
       createParticlesAtPosition(window.innerWidth - 100, window.innerHeight - 100);
       return;
@@ -52,16 +39,16 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     const startX = buttonRect.left + buttonRect.width / 2;
     const startY = buttonRect.top + buttonRect.height / 2;
 
-    debugLog(`🎨 [Animation] Creating particles at button position: ${startX}, ${startY}`);
+    debugLog(`[Love] Creating particles at button position: ${startX}, ${startY}`);
     createParticlesAtPosition(startX, startY);
   }, []);
 
   // Separate function to create particles at specific position
-  const createParticlesAtPosition = useCallback((startX: number, startY: number) => {
-    debugLog(`🎨 [Animation] Creating particles at position: ${startX}, ${startY}`);
+  const createParticlesAtPosition = useCallback((startX: number, startY: number, countOverride?: number) => {
+    debugLog(`[Love] Creating particles at position: ${startX}, ${startY}`);
 
     // Optimized for spam: fewer hearts, faster creation
-    const heartCount = Math.floor(Math.random() * 2) + 3; // 3-4 hearts (reduced from 5-7)
+    const heartCount = countOverride ?? (Math.floor(Math.random() * 2) + 3); // 3-4 hearts by default
     const heartColors = ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80'];
 
     for (let i = 0; i < heartCount; i++) {
@@ -85,7 +72,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
       }, particle.delay || 0);
     }
 
-    debugLog(`✅ [Animation] Created ${heartCount} particles successfully`);
+    debugLog(`[Love] Created ${heartCount} particles`);
   }, []);
 
   // Hybrid approach: WebSocket with Polling fallback
@@ -93,21 +80,21 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     let cleanup: (() => void) | null = null;
 
     const initializeConnection = async () => {
-      debugLog('🔄 [WebSocket] Initializing connection...');
+      debugLog('[WS] Initializing connection');
 
       try {
         // Try WebSocket first
         await tryWebSocketConnection();
       } catch (error) {
-        debugError('❌ [WebSocket] Connection failed:', error);
-        debugLog('🔄 [Fallback] Switching to polling mode...');
+        debugError('[WS] Connection failed:', error);
+        debugLog('[Fallback] Switching to polling mode');
         setupPollingFallback();
       }
     };
 
     const tryWebSocketConnection = async () => {
       try {
-        debugLog('🔌 [WebSocket] Loading Echo library...');
+        debugLog('[WS] Loading Echo library');
         // @ts-ignore
         await import('../echo.js');
 
@@ -115,47 +102,50 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           throw new Error('Echo not available');
         }
 
-        debugLog('✅ [WebSocket] Echo library loaded successfully');
+        debugLog('[WS] Echo library loaded');
         const pusher = window.Echo.connector.pusher;
 
         // Set connection timeout
         const connectionTimeout = setTimeout(() => {
-          debugWarn('⏰ [WebSocket] Connection timeout after 10 seconds');
-          debugLog('🔄 [Fallback] Switching to polling due to timeout...');
+          debugWarn('[WS] Connection timeout after 10 seconds');
+          debugLog('[Fallback] Switching to polling due to timeout');
           setupPollingFallback();
         }, 10000);
 
         pusher.connection.bind('connected', () => {
-          debugLog('🎉 [WebSocket] Successfully connected to WebSocket server!');
+          debugLog('[WS] Connected');
           clearTimeout(connectionTimeout);
           setConnectionStatus('connected');
 
           // Subscribe to love channel for animations
-          debugLog('🔔 [WebSocket] Subscribing to love-counter channel...');
-          window.Echo.channel('love-counter')
-            .listen('LoveClicked', (e: any) => {
-              debugLog('💖 [WebSocket] Received love event from another user!', e);
-              createParticles(); // Trigger animation for other users' clicks
-            });
+          debugLog('[WS] Subscribing to love-counter');
+          const channel = window.Echo.channel('love-counter')
+          const handleEvent = (e: any) => {
+            debugLog('[WS] Received love event', e);
+            enqueueRemoteBurst();
+          }
+          // Support both default and custom names for safety
+          channel.listen('.love.clicked', handleEvent)
+          channel.listen('LoveClicked', handleEvent)
         });
 
         pusher.connection.bind('disconnected', () => {
-          debugWarn('⚠️ [WebSocket] Disconnected from WebSocket server');
-          debugLog('🔄 [Fallback] Switching to polling due to disconnection...');
+          debugWarn('[WS] Disconnected');
+          debugLog('[Fallback] Switching to polling due to disconnection');
           setConnectionStatus('disconnected');
           setupPollingFallback();
         });
 
         pusher.connection.bind('error', (error: any) => {
-          debugError('❌ [WebSocket] Connection error:', error);
-          debugLog('🔄 [Fallback] Switching to polling due to error...');
+          debugError('[WS] Connection error:', error);
+          debugLog('[Fallback] Switching to polling due to error');
           setConnectionStatus('error');
           setupPollingFallback();
         });
 
         pusher.connection.bind('unavailable', () => {
-          debugWarn('⚠️ [WebSocket] WebSocket service unavailable');
-          debugLog('🔄 [Fallback] Switching to polling due to service unavailable...');
+          debugWarn('[WS] Service unavailable');
+          debugLog('[Fallback] Switching to polling due to service unavailable');
           setConnectionStatus('error');
           setupPollingFallback();
         });
@@ -166,13 +156,13 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         };
 
       } catch (error) {
-        debugError('💥 [WebSocket] Failed to initialize WebSocket:', error);
+        debugError('[WS] Failed to initialize WebSocket:', error);
         throw error;
       }
     };
 
     const setupPollingFallback = () => {
-      debugLog('📡 [Polling] Starting HTTP polling fallback mode');
+      debugLog('[Polling] Starting HTTP polling');
       setConnectionStatus('connected'); // Show as connected for polling
 
       // Clear any existing polling
@@ -180,7 +170,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         clearInterval(pollingIntervalRef.current);
       }
 
-      // Poll for new events every 1 second (reduced from 2 seconds)
+      // Poll for new events every 1 second
       pollingIntervalRef.current = window.setInterval(async () => {
         try {
           const response = await fetch('/api/love/poll', {
@@ -192,23 +182,22 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           if (response.ok) {
             const data = await response.json();
             if (data.events && data.events.length > 0) {
-              debugLog(`📡 [Polling] Received ${data.events.length} new events`);
+              debugLog(`[Polling] Received ${data.events.length} new events`);
               data.events.forEach((event: any) => {
-                debugLog('💖 [Polling] Processing love event:', event);
+                debugLog('[Polling] Processing love event:', event);
                 lastEventId.current = event.id;
-                // Trigger animation for each event
-                createParticles();
+                enqueueRemoteBurst();
               });
             }
           } else {
-            debugWarn('⚠️ [Polling] HTTP polling request failed:', response.status);
+            debugWarn('[Polling] HTTP request failed:', response.status);
           }
         } catch (error) {
-          debugError('❌ [Polling] Polling request error:', error);
+          debugError('[Polling] Request error:', error);
         }
-      }, 1000); // 1 second interval for faster response
+      }, 1000);
 
-      debugLog('✅ [Polling] HTTP polling started successfully (1-second interval)');
+      debugLog('[Polling] Started (1s interval)');
     };
 
     initializeConnection();
@@ -233,20 +222,39 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     };
   }, []);
 
+  // Aggregate remote events to lighter bursts
+  const pendingRemoteCount = useRef<number>(0);
+  const flushTimer = useRef<number | null>(null);
+  const enqueueRemoteBurst = useCallback(() => {
+    pendingRemoteCount.current += 1;
+    if (flushTimer.current) return;
+    flushTimer.current = window.setTimeout(() => {
+      const count = Math.min(8, Math.max(2, pendingRemoteCount.current));
+      pendingRemoteCount.current = 0;
+      flushTimer.current && clearTimeout(flushTimer.current);
+      flushTimer.current = null;
+      // Use button position burst for consistency
+      const rect = buttonRef.current?.getBoundingClientRect();
+      const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 100;
+      const y = rect ? rect.top + rect.height / 2 : window.innerHeight - 100;
+      createParticlesAtPosition(x, y, count);
+    }, 200);
+  }, [createParticlesAtPosition]);
+
   const handleClick = async () => {
     if (isClicking) return;
 
-    debugLog('💖 [Love Button] Button clicked!');
+    debugLog('[Love] Button clicked');
     setIsClicking(true);
 
     // Create particles immediately for instant feedback (don't wait for server)
-    debugLog('🎨 [Love Button] Creating instant particle animation for sender...');
+    debugLog('[Love] Creating instant particles for sender');
     createParticles();
-    debugLog('🎨 [Love Button] Instant particle animation triggered');
+    debugLog('[Love] Instant particles triggered');
 
     // Send to server in background (non-blocking)
     try {
-      debugLog('📤 [Love Button] Sending love click to server (background)...');
+      debugLog('[Love] Sending click to server');
       const response = await fetch('/api/love/click', {
         method: 'POST',
         headers: {
@@ -257,12 +265,12 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
 
       if (response.ok) {
         const data = await response.json();
-        debugLog('✅ [Love Button] Server response received:', data);
+        debugLog('[Love] Server response received:', data);
       } else {
-        debugWarn('⚠️ [Love Button] Server returned error:', response.status, response.statusText);
+        debugWarn('[Love] Server returned error:', response.status, response.statusText);
       }
     } catch (error) {
-      debugError('❌ [Love Button] Network error:', error);
+      debugError('[Love] Network error:', error);
     } finally {
       // Quick reset for rapid clicking
       setTimeout(() => setIsClicking(false), 100); // Reduced from 300ms to 100ms

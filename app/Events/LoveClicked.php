@@ -35,8 +35,8 @@ class LoveClicked implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        // Do not expose session/user identifiers to clients for privacy
         return [
-            'user_id' => $this->userId,
             'timestamp' => now()->toISOString(),
         ];
     }

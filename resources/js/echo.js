@@ -9,11 +9,11 @@ const isDebugEnabled = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true';
 
 // Debug WebSocket configuration only if debug is enabled
 if (isDebugEnabled) {
-  console.log('🔧 [Echo Config] WebSocket configuration:');
-  console.log('  📍 Host:', import.meta.env.VITE_REVERB_HOST || '127.0.0.1');
-  console.log('  🔌 Port:', import.meta.env.VITE_REVERB_PORT || 8080);
-  console.log('  🔑 Key:', import.meta.env.VITE_REVERB_APP_KEY || 'brave-love-key-2024');
-  console.log('  🔐 Scheme:', import.meta.env.VITE_REVERB_SCHEME || 'http');
+  console.log('[Echo] WebSocket configuration');
+  console.log('  host:', import.meta.env.VITE_REVERB_HOST || '127.0.0.1');
+  console.log('  port:', import.meta.env.VITE_REVERB_PORT || 8080);
+  console.log('  key:', import.meta.env.VITE_REVERB_APP_KEY || 'brave-love-key-2024');
+  console.log('  scheme:', import.meta.env.VITE_REVERB_SCHEME || 'http');
 }
 
 // Create Echo instance for Laravel Reverb
@@ -39,7 +39,7 @@ window.Echo = new Echo({
 });
 
 if (isDebugEnabled) {
-  console.log('✅ [Echo Config] Echo instance created successfully');
+  console.log('[Echo] Instance created');
 }
 
 export default window.Echo;

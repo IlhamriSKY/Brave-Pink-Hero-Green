@@ -29,7 +29,7 @@ class LoveController extends Controller
             $eventId = uniqid();
             $eventData = [
                 'id' => $eventId,
-                'user_id' => $userId,
+                // Do not include user identifier in payload returned to clients
                 'timestamp' => now()->toISOString(),
                 'created_at' => time()
             ];
