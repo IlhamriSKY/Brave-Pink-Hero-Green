@@ -11,7 +11,9 @@
 
 A modern web application for image conversion with Pink-Green duotone effects built using Laravel 12, React 19, Tailwind CSS 4, and Shadcn/UI.
 
-🌐 **Demo**: [https://brave-pink-hero-green.ilhamriski.com/](https://brave-pink-hero-green.ilhamriski.com/)
+🌐 **Demo**: [https://brave-pink-hero-green.ilhamriski.com](https://brave-pink-hero-green.ilhamriski.com)
+
+💡 **Inspired by**: [brave-pink-hero-green.lovable.app](https://brave-pink-hero-green.lovable.app)
 
 ## ✨ Key Features
 
