@@ -116,6 +116,14 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           debugLog('🎉 [WebSocket] Successfully connected to WebSocket server!');
           clearTimeout(connectionTimeout);
           setConnectionStatus('connected');
+          
+          // Subscribe to love channel for animations
+          debugLog('🔔 [WebSocket] Subscribing to love-counter channel...');
+          window.Echo.channel('love-counter')
+            .listen('LoveClicked', (e: any) => {
+              debugLog('💖 [WebSocket] Received love event from another user!', e);
+              createParticles(); // Trigger animation for other users' clicks
+            });
         });
 
         pusher.connection.bind('disconnected', () => {
@@ -173,7 +181,10 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
             if (data.events && data.events.length > 0) {
               debugLog(`📡 [Polling] Received ${data.events.length} new events`);
               data.events.forEach((event: any) => {
+                debugLog('💖 [Polling] Processing love event:', event);
                 lastEventId.current = event.id;
+                // Trigger animation for each event
+                createParticles();
               });
             }
           } else {

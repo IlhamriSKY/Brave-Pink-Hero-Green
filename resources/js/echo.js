@@ -26,12 +26,16 @@ window.Echo = new Echo({
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
   enabledTransports: ['ws', 'wss'],
   disableStats: true,
-  enableLogging: false, // Disable excessive logging
+  enableLogging: false,
   logToConsole: false,
-  // Connection timeout settings
-  activityTimeout: 30000,
-  pongTimeout: 30000,
-  unavailableTimeout: 15000,
+  // Improved connection settings
+  activityTimeout: 120000, // 2 minutes
+  pongTimeout: 30000, // 30 seconds  
+  unavailableTimeout: 10000, // 10 seconds
+  // Additional Pusher options for better stability
+  cluster: undefined, // Disable cluster for local Reverb
+  encrypted: false, // Set to true if using HTTPS
+  authEndpoint: '/broadcasting/auth',
 });
 
 if (isDebugEnabled) {
