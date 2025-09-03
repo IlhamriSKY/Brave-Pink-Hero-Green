@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "title": "Brave Pink Hero Green",
+    "description": "Tukar imej dengan pelbagai kesan. Proses pantas dan mudah.",
+    "uploadTitle": "Muat Naik Imej Anda",
+    "uploadDescription": "Seret dan lepaskan fail imej, atau klik untuk pilih",
+    "uploadButton": "Pilih Imej",
+    "uploadFormats": "JPG, PNG, GIF, WebP (maks 10MB)",
+    "processingTitle": "Memproses Imej",
+    "processingDescription": "Sedang menggunakan kesan penukaran...",
+    "resultTitle": "Perbandingan Hasil",
+    "resultDescription": "Gunakan gelongsor untuk membandingkan imej asal dan imej diproses",
+    "downloadButton": "Muat Turun Imej",
+    "resetButton": "Proses Imej Baharu"
+  },
+  "comparison": {
+    "before": "Sebelum",
+    "after": "Selepas"
+  },
+  "conversion": {
+    "modes": {
+      "label": "Mod Penukaran",
+      "duotone_pg": "Duotone Merah Jambu → Hijau",
+      "duotone_gp": "Duotone Hijau → Merah Jambu"
+    },
+    "actions": {
+      "convert": "Tukar",
+      "save": "Simpan",
+      "reset": "Set Semula"
+    },
+    "safety": {
+      "local": "Privasi terjamin! Semua proses dilakukan dalam pelayar anda tanpa dimuat naik ke mana-mana pelayan."
+    },
+    "counter": {
+      "files": "imej diproses"
+    }
+  },
+  "processing": {
+    "totalProcessed": "Jumlah Imej Diproses:"
+  },
+  "navigation": {
+    "github": "Repositori GitHub",
+    "language": "Bahasa"
+  },
+  "theme": {
+    "light": "Mod Terang",
+    "dark": "Mod Gelap",
+    "toggle": "Tukar Tema"
+  },
+  "errors": {
+    "fileTypeError": "Sila pilih fail imej yang sah (JPG, PNG, GIF, WebP)",
+    "fileSizeError": "Saiz fail mesti kurang daripada 10MB",
+    "processingError": "Gagal memproses imej. Sila cuba lagi.",
+    "genericError": "Ralat berlaku. Sila cuba lagi."
+  },
+  "accessibility": {
+    "imageAlt": "Imej yang dimuat naik untuk diproses",
+    "logoAlt": "Logo Brave Pink Hero Green",
+    "compareSlider": "Gelongsor perbandingan imej"
+  },
+  "footer": {
+    "counter": "Jumlah Imej Diproses",
+    "copyright": "© 2025 Brave Pink Hero Green. Hak cipta terpelihara.",
+    "madeWith": "Dicipta dengan",
+    "inspiredBy": "diilhamkan dari"
+  }
+}

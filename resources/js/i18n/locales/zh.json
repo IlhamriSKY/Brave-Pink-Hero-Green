@@ -1,0 +1,64 @@
+{
+  "hero": {
+    "title": "勇敢的粉色英雄绿",
+    "description": "使用各种效果转换图像。快速简便的处理。",
+    "uploadTitle": "将您的图像拖放到这里",
+    "uploadDescription": "拖放图像文件，或点击浏览",
+    "uploadButton": "选择图像",
+    "uploadFormats": "JPG、PNG、GIF、WebP（最大10MB）",
+    "processingTitle": "正在处理您的图像",
+    "processingDescription": "正在应用转换效果...",
+    "resultTitle": "结果比较",
+    "resultDescription": "滑动或拖拽以比较原始与处理后的图像",
+    "downloadButton": "下载处理后图像",
+    "resetButton": "处理新图像"
+  },
+  "comparison": {
+    "before": "处理前",
+    "after": "处理后"
+  },
+  "conversion": {
+    "modes": {
+      "label": "转换模式",
+      "duotone_pg": "双色调 粉色→绿色",
+      "duotone_gp": "双色调 绿色→粉色"
+    },
+    "actions": {
+      "convert": "转换",
+      "save": "保存",
+      "reset": "重置"
+    },
+    "safety": {
+      "local": "100%隐私保护！所有处理均在您的浏览器中完成，无需上传，不收集数据。"
+    },
+    "counter": {
+      "files": "张图像已处理"
+    }
+  },
+  "navigation": {
+    "github": "GitHub仓库",
+    "language": "语言"
+  },
+  "theme": {
+    "light": "浅色模式",
+    "dark": "深色模式",
+    "toggle": "切换主题"
+  },
+  "errors": {
+    "fileTypeError": "请选择有效的图像文件（JPG、PNG、GIF、WebP）",
+    "fileSizeError": "文件大小必须小于10MB",
+    "processingError": "处理图像失败。请重试。",
+    "genericError": "发生错误。请重试。"
+  },
+  "accessibility": {
+    "imageAlt": "上传的待处理图像",
+    "logoAlt": "勇敢的粉色英雄绿 标志",
+    "compareSlider": "图像比较滑块"
+  },
+  "footer": {
+    "counter": "已处理图像",
+    "copyright": "© 2025 勇敢的粉色英雄绿. 保留所有权利。",
+    "madeWith": "用爱制作",
+    "inspiredBy": "灵感来自"
+  }
+}

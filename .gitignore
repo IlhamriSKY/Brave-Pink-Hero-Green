@@ -1,0 +1,128 @@
+# Laravel
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/.env
+.env.backup
+.env.production
+.env.local
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+
+# Build files
+/public/build
+/public/mix-manifest.json
+/public/assets/
+/dist/
+
+# Cache and logs
+*.log
+/storage/logs/*.log
+/storage/app/public/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+
+# Database
+*.sqlite
+*.sqlite3
+/database/*.sqlite
+
+# IDE and editors
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# PHP
+.phpactor.json
+/.phpunit.cache
+composer.phar
+/vendor/
+.php_cs.cache
+.php-cs-fixer.cache
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.yarn/
+.pnp.*
+
+# Coverage reports
+/coverage/
+*.lcov
+.nyc_output
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+.env.local
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Temporary folders
+tmp/
+temp/
+
+# Laravel Echo Server
+laravel-echo-server.lock
+
+# Laravel Mix
+/public/mix-manifest.json
+
+# Backups
+*.backup
+*.bak
+
+# Local development
+.vagrant/
+
+composer.lock
+package-lock.json

@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "title": "Brave Pink Hero Green",
+    "description": "Convert images with various effects. Fast and easy processing.",
+    "uploadTitle": "Drop Your Image Here",
+    "uploadDescription": "Drag and drop an image file, or click to browse",
+    "uploadButton": "Choose Image",
+    "uploadFormats": "JPG, PNG, GIF, WebP (max 10MB)",
+    "processingTitle": "Processing Your Image",
+    "processingDescription": "Applying conversion effects...",
+    "resultTitle": "Result Comparison",
+    "resultDescription": "Swipe or drag to compare original vs processed",
+    "downloadButton": "Download Processed Image",
+    "resetButton": "Process New Image"
+  },
+  "comparison": {
+    "before": "Before",
+    "after": "After"
+  },
+  "conversion": {
+    "modes": {
+      "label": "Conversion Mode",
+      "duotone_pg": "Duotone Pink→Green",
+      "duotone_gp": "Duotone Green→Pink"
+    },
+    "actions": {
+      "convert": "Convert",
+      "save": "Save",
+      "reset": "Reset"
+    },
+    "safety": {
+      "local": "100% Private! All processing happens locally in your browser - no uploads, no data collection."
+    },
+    "counter": {
+      "files": "images processed"
+    }
+  },
+  "processing": {
+    "totalProcessed": "Images Processed:"
+  },
+  "navigation": {
+    "github": "GitHub Repository",
+    "language": "Language"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "toggle": "Toggle Theme"
+  },
+  "errors": {
+    "fileTypeError": "Please select a valid image file (JPG, PNG, GIF, WebP)",
+    "fileSizeError": "File size must be less than 10MB",
+    "processingError": "Failed to process image. Please try again.",
+    "genericError": "An error occurred. Please try again."
+  },
+  "accessibility": {
+    "imageAlt": "Uploaded image for processing",
+    "logoAlt": "Brave Pink Hero Green Logo",
+    "compareSlider": "Image comparison slider"
+  },
+  "footer": {
+    "counter": "Images Processed",
+    "copyright": "© 2025 Brave Pink Hero Green. All rights reserved.",
+    "madeWith": "Made with",
+    "inspiredBy": "inspired by"
+  }
+}
