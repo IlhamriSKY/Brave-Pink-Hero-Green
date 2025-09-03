@@ -28,10 +28,10 @@ window.Echo = new Echo({
   disableStats: true,
   enableLogging: false,
   logToConsole: false,
-  // Improved connection settings
-  activityTimeout: 120000, // 2 minutes
-  pongTimeout: 30000, // 30 seconds
-  unavailableTimeout: 10000, // 10 seconds
+  // Optimized connection settings for stability and performance
+  activityTimeout: 60000, // 1 minute (reduced from 2 minutes)
+  pongTimeout: 10000, // 10 seconds (reduced from 30 seconds)
+  unavailableTimeout: 5000, // 5 seconds (reduced from 10 seconds)
   // Additional Pusher options for better stability
   cluster: undefined, // Disable cluster for local Reverb
   encrypted: false, // Set to true if using HTTPS

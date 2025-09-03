@@ -13,16 +13,16 @@ class LoveController extends Controller
     {
         $userId = $request->session()->getId();
 
-        // Rate limiting: 3 clicks per 2 seconds per user (untuk prevent spam)
+        // Rate limiting: 10 clicks per 1 second per user (untuk spam experience)
         $key = 'love-click:' . $userId;
 
-        if (RateLimiter::tooManyAttempts($key, 3)) {
+        if (RateLimiter::tooManyAttempts($key, 10)) {
             return response()->json([
                 'error' => 'Too many attempts. Please wait.'
             ], 429);
         }
 
-        RateLimiter::hit($key, 2); // 2 seconds decay
+        RateLimiter::hit($key, 1); // 1 second decay
 
         try {
             // Store event for polling fallback

@@ -60,26 +60,26 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
   const createParticlesAtPosition = useCallback((startX: number, startY: number) => {
     debugLog(`🎨 [Animation] Creating particles at position: ${startX}, ${startY}`);
 
-    // Instagram Live style: random sized floating hearts
-    const heartCount = Math.floor(Math.random() * 3) + 5; // 5-7 hearts
+    // Optimized for spam: fewer hearts, faster creation
+    const heartCount = Math.floor(Math.random() * 2) + 3; // 3-4 hearts (reduced from 5-7)
     const heartColors = ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80'];
 
     for (let i = 0; i < heartCount; i++) {
       const particle: Particle = {
         id: `${Date.now()}-${Math.random()}-${i}`,
-        x: startX + (Math.random() - 0.5) * 25, // Tighter spread around button
+        x: startX + (Math.random() - 0.5) * 20, // Tighter spread (reduced from 25)
         y: startY,
         life: 1,
         velocity: {
-          x: (Math.random() - 0.5) * 1, // Gentler horizontal drift
-          y: -2.5 - Math.random() * 0.5, // Consistent upward float
+          x: (Math.random() - 0.5) * 0.8, // Gentler horizontal drift (reduced)
+          y: -3 - Math.random() * 0.5, // Faster upward float (increased from -2.5)
         },
-        delay: i * 50 + Math.random() * 100, // Faster stagger for more dynamic effect
-        size: 0.4 + Math.random() * 0.8, // More random sizes (0.4x - 1.2x)
+        delay: i * 25 + Math.random() * 50, // Faster stagger (reduced from 50+100)
+        size: 0.5 + Math.random() * 0.6, // Smaller size range (reduced from 0.4-1.2)
         color: heartColors[Math.floor(Math.random() * heartColors.length)],
       };
 
-      // Add particles with delay for Instagram effect
+      // Add particles with minimal delay for faster spam
       setTimeout(() => {
         setParticles(prev => [...prev, particle]);
       }, particle.delay || 0);
@@ -180,7 +180,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         clearInterval(pollingIntervalRef.current);
       }
 
-      // Poll for new events every 2 seconds
+      // Poll for new events every 1 second (reduced from 2 seconds)
       pollingIntervalRef.current = window.setInterval(async () => {
         try {
           const response = await fetch('/api/love/poll', {
@@ -206,9 +206,9 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         } catch (error) {
           debugError('❌ [Polling] Polling request error:', error);
         }
-      }, 2000);
+      }, 1000); // 1 second interval for faster response
 
-      debugLog('✅ [Polling] HTTP polling started successfully (2-second interval)');
+      debugLog('✅ [Polling] HTTP polling started successfully (1-second interval)');
     };
 
     initializeConnection();
@@ -239,8 +239,14 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     debugLog('💖 [Love Button] Button clicked!');
     setIsClicking(true);
 
+    // Create particles immediately for instant feedback (don't wait for server)
+    debugLog('🎨 [Love Button] Creating instant particle animation for sender...');
+    createParticles();
+    debugLog('🎨 [Love Button] Instant particle animation triggered');
+
+    // Send to server in background (non-blocking)
     try {
-      debugLog('📤 [Love Button] Sending love click to server...');
+      debugLog('📤 [Love Button] Sending love click to server (background)...');
       const response = await fetch('/api/love/click', {
         method: 'POST',
         headers: {
@@ -251,18 +257,15 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
 
       if (response.ok) {
         const data = await response.json();
-        debugLog('✅ [Love Button] Server response:', data);
-        debugLog('🎨 [Love Button] Creating particle animation for sender...');
-        // Create particles when click is successful
-        createParticles(); // Uses button position automatically
-        debugLog('🎨 [Love Button] Particle animation triggered for sender');
+        debugLog('✅ [Love Button] Server response received:', data);
       } else {
         debugWarn('⚠️ [Love Button] Server returned error:', response.status, response.statusText);
       }
     } catch (error) {
       debugError('❌ [Love Button] Network error:', error);
     } finally {
-      setTimeout(() => setIsClicking(false), 300);
+      // Quick reset for rapid clicking
+      setTimeout(() => setIsClicking(false), 100); // Reduced from 300ms to 100ms
     }
   };
 
@@ -299,31 +302,31 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
                 x: 0
               }}
               animate={{
-                scale: [0.2, 1.5, 0], // Small → Big → Gone (continuous growth then shrink)
+                scale: [0.2, 1.2, 0], // Smaller max scale for faster animation
                 opacity: [0, 1, 0], // Fade in → Full → Fade out
-                y: -200, // Much higher float distance
-                x: (Math.random() - 0.5) * 50, // More horizontal drift
+                y: -150, // Reduced float distance for faster completion
+                x: (Math.random() - 0.5) * 30, // Less horizontal drift
               }}
               exit={{
                 scale: 0,
                 opacity: 0
               }}
               transition={{
-                duration: 2.5, // Faster animation
-                ease: "easeOut", // Simple easing for natural movement
+                duration: 1.8, // Much faster animation (reduced from 2.5s)
+                ease: "easeOut",
                 scale: {
-                  duration: 2.5,
-                  times: [0, 0.6, 1], // Grow until 60%, then shrink quickly
+                  duration: 1.8,
+                  times: [0, 0.7, 1], // Grow until 70%, then shrink quickly
                   ease: "easeOut"
                 },
                 opacity: {
-                  duration: 2.5,
-                  times: [0, 0.15, 1], // Very quick fade in, slow fade out
+                  duration: 1.8,
+                  times: [0, 0.2, 1], // Quick fade in, smooth fade out
                   ease: "easeOut"
                 },
                 y: {
-                  duration: 2.5,
-                  ease: "easeOut" // Slightly faster upward movement
+                  duration: 1.8,
+                  ease: "easeOut"
                 },
                 x: {
                   duration: 2.5,
