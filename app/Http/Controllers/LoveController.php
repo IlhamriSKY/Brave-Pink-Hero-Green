@@ -13,10 +13,10 @@ class LoveController extends Controller
     {
         $userId = $request->session()->getId();
 
-        // Rate limiting: 10 clicks per 1 second per user (untuk spam experience)
+        // Rate limiting: allow high burst for spam experience but keep guard
         $key = 'love-click:' . $userId;
 
-        if (RateLimiter::tooManyAttempts($key, 10)) {
+        if (RateLimiter::tooManyAttempts($key, 100)) {
             return response()->json([
                 'error' => 'Too many attempts. Please wait.'
             ], 429);
@@ -38,11 +38,11 @@ class LoveController extends Controller
             $events = Cache::get('love_events', []);
             $events[] = $eventData;
 
-            // Keep only last 50 events and clean old ones
-            $events = array_filter($events, fn($e) => (time() - $e['created_at']) < 30);
-            $events = array_slice($events, -50);
+            // Keep only recent events for fallback consumers
+            $events = array_filter($events, fn($e) => (time() - $e['created_at']) < 12);
+            $events = array_slice($events, -200);
 
-            Cache::put('love_events', $events, 60);
+            Cache::put('love_events', $events, 30);
 
             // Broadcast the event (no counter needed)
             broadcast(new LoveClicked($userId));

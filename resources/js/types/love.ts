@@ -8,7 +8,6 @@ declare global {
 }
 
 export interface LoveClickedEvent {
-  user_id: string;
   timestamp: string;
 }
 
@@ -21,4 +20,7 @@ export interface Particle {
   color: string;
   delay?: number;
   size?: number;
+  drift?: number; // horizontal drift distance
+  rise?: number; // vertical rise distance (positive, will be used as -rise)
+  duration?: number; // animation duration seconds
 }

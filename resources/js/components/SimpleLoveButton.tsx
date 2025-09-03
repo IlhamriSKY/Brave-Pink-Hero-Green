@@ -47,32 +47,45 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
   const createParticlesAtPosition = useCallback((startX: number, startY: number, countOverride?: number) => {
     debugLog(`[Love] Creating particles at position: ${startX}, ${startY}`);
 
-    // Optimized for spam: fewer hearts, faster creation
-    const heartCount = countOverride ?? (Math.floor(Math.random() * 2) + 3); // 3-4 hearts by default
+    const baseCount = countOverride ?? (10 + Math.floor(Math.random() * 6)); // 10-15 hearts by default
     const heartColors = ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80'];
 
-    for (let i = 0; i < heartCount; i++) {
-      const particle: Particle = {
-        id: `${Date.now()}-${Math.random()}-${i}`,
-        x: startX + (Math.random() - 0.5) * 20, // Tighter spread (reduced from 25)
-        y: startY,
-        life: 1,
-        velocity: {
-          x: (Math.random() - 0.5) * 0.8, // Gentler horizontal drift (reduced)
-          y: -3 - Math.random() * 0.5, // Faster upward float (increased from -2.5)
-        },
-        delay: i * 25 + Math.random() * 50, // Faster stagger (reduced from 50+100)
-        size: 0.5 + Math.random() * 0.6, // Smaller size range (reduced from 0.4-1.2)
-        color: heartColors[Math.floor(Math.random() * heartColors.length)],
-      };
-
-      // Add particles with minimal delay for faster spam
-      setTimeout(() => {
-        setParticles(prev => [...prev, particle]);
-      }, particle.delay || 0);
+    // Poisson-like sampling in 1D (x direction) to avoid overlap
+    const samples: number[] = [];
+    const span = 80; // total horizontal span (+/- 40px)
+    const minDist = 12; // min separation in px
+    let attempts = 0;
+    while (samples.length < baseCount && attempts < baseCount * 20) {
+      attempts++;
+      const candidate = (Math.random() - 0.5) * span;
+      if (samples.every((s) => Math.abs(s - candidate) >= minDist)) {
+        samples.push(candidate);
+      }
     }
 
-    debugLog(`[Love] Created ${heartCount} particles`);
+    samples.sort((a, b) => a - b);
+
+    samples.forEach((dx, i) => {
+      const rise = 200 + Math.random() * 160; // 200-360 px upward
+      const drift = dx + (Math.random() - 0.5) * 10; // small extra jitter
+      const duration = 1.5 + Math.random() * 0.8; // 1.5 - 2.3s
+      const particle: Particle = {
+        id: `${Date.now()}-${Math.random()}-${i}`,
+        x: startX + dx,
+        y: startY,
+        life: 1,
+        velocity: { x: 0, y: -3 },
+        delay: i * 18 + Math.random() * 40, // waterfall upwards
+        size: 0.6 + Math.random() * 0.7,
+        color: heartColors[Math.floor(Math.random() * heartColors.length)],
+        drift,
+        rise,
+        duration,
+      };
+      setTimeout(() => setParticles((prev) => [...prev, particle]), particle.delay || 0);
+    });
+
+    debugLog(`[Love] Created ${samples.length} particles`);
   }, []);
 
   // Hybrid approach: WebSocket with Polling fallback
@@ -246,14 +259,16 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
   }, [createParticlesAtPosition]);
 
   const handleClick = async () => {
-    if (isClicking) return;
-
     debugLog('[Love] Button clicked');
     setIsClicking(true);
 
     // Create particles immediately for instant feedback (don't wait for server)
     debugLog('[Love] Creating instant particles for sender');
-    createParticles();
+    // Local burst richer: 12-18 hearts
+    const rect = buttonRef.current?.getBoundingClientRect();
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 100;
+    const y = rect ? rect.top + rect.height / 2 : window.innerHeight - 100;
+    createParticlesAtPosition(x, y, 12 + Math.floor(Math.random() * 7));
     debugLog('[Love] Instant particles triggered');
 
     // Send to server in background (non-blocking)
@@ -277,7 +292,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
       debugError('[Love] Network error:', error);
     } finally {
       // Quick reset for rapid clicking
-      setTimeout(() => setIsClicking(false), 100); // Reduced from 300ms to 100ms
+      setTimeout(() => setIsClicking(false), 40);
     }
   };
 
@@ -303,46 +318,46 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
               style={{
                 left: particle.x - 8,
                 top: particle.y - 8,
-                width: 16 * (particle.size || 1), // Smaller base size
+                width: 16 * (particle.size || 1),
                 height: 16 * (particle.size || 1),
                 zIndex: 9999, // Ensure above all elements
               }}
               initial={{
-                scale: 0.2, // Start small
+                scale: 0.2,
                 opacity: 0,
                 y: 0,
                 x: 0
               }}
               animate={{
-                scale: [0.2, 1.2, 0], // Smaller max scale for faster animation
-                opacity: [0, 1, 0], // Fade in → Full → Fade out
-                y: -150, // Reduced float distance for faster completion
-                x: (Math.random() - 0.5) * 30, // Less horizontal drift
+                scale: [0.2, 1.1, 0],
+                opacity: [0, 1, 0],
+                y: -(particle.rise || 220),
+                x: particle.drift ?? 0,
               }}
               exit={{
                 scale: 0,
                 opacity: 0
               }}
               transition={{
-                duration: 1.8, // Much faster animation (reduced from 2.5s)
+                duration: particle.duration || 1.9,
                 ease: "easeOut",
                 scale: {
-                  duration: 1.8,
-                  times: [0, 0.7, 1], // Grow until 70%, then shrink quickly
+                  duration: particle.duration || 1.9,
+                  times: [0, 0.7, 1],
                   ease: "easeOut"
                 },
                 opacity: {
-                  duration: 1.8,
-                  times: [0, 0.2, 1], // Quick fade in, smooth fade out
+                  duration: particle.duration || 1.9,
+                  times: [0, 0.2, 1],
                   ease: "easeOut"
                 },
                 y: {
-                  duration: 1.8,
+                  duration: particle.duration || 1.9,
                   ease: "easeOut"
                 },
                 x: {
-                  duration: 2.5,
-                  ease: "easeOut" // Natural horizontal drift
+                  duration: (particle.duration || 1.9) + 0.3,
+                  ease: "easeOut"
                 }
               }}
               onAnimationComplete={() => {
