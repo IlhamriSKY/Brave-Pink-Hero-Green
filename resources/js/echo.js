@@ -30,7 +30,7 @@ window.Echo = new Echo({
   logToConsole: false,
   // Improved connection settings
   activityTimeout: 120000, // 2 minutes
-  pongTimeout: 30000, // 30 seconds  
+  pongTimeout: 30000, // 30 seconds
   unavailableTimeout: 10000, // 10 seconds
   // Additional Pusher options for better stability
   cluster: undefined, // Disable cluster for local Reverb

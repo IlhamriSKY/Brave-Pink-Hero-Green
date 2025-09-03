@@ -42,12 +42,23 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     const buttonRect = buttonRef.current?.getBoundingClientRect();
 
     if (!buttonRect) {
-      return; // Can't create particles without button position
+      debugWarn('⚠️ [Animation] Button ref not available, using fallback position');
+      // Fallback: use fixed position if button ref not available
+      createParticlesAtPosition(window.innerWidth - 100, window.innerHeight - 100);
+      return;
     }
 
     // Always start from button position for consistency
     const startX = buttonRect.left + buttonRect.width / 2;
     const startY = buttonRect.top + buttonRect.height / 2;
+
+    debugLog(`🎨 [Animation] Creating particles at button position: ${startX}, ${startY}`);
+    createParticlesAtPosition(startX, startY);
+  }, []);
+
+  // Separate function to create particles at specific position
+  const createParticlesAtPosition = useCallback((startX: number, startY: number) => {
+    debugLog(`🎨 [Animation] Creating particles at position: ${startX}, ${startY}`);
 
     // Instagram Live style: random sized floating hearts
     const heartCount = Math.floor(Math.random() * 3) + 5; // 5-7 hearts
@@ -73,6 +84,8 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         setParticles(prev => [...prev, particle]);
       }, particle.delay || 0);
     }
+
+    debugLog(`✅ [Animation] Created ${heartCount} particles successfully`);
   }, []);
 
   // Hybrid approach: WebSocket with Polling fallback
@@ -116,7 +129,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           debugLog('🎉 [WebSocket] Successfully connected to WebSocket server!');
           clearTimeout(connectionTimeout);
           setConnectionStatus('connected');
-          
+
           // Subscribe to love channel for animations
           debugLog('🔔 [WebSocket] Subscribing to love-counter channel...');
           window.Echo.channel('love-counter')
@@ -209,7 +222,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [createParticles]);
+  }, [createParticles, debugLog, debugWarn, debugError]);
 
   // Cleanup particles automatically via Framer Motion
   useEffect(() => {
@@ -239,9 +252,10 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
       if (response.ok) {
         const data = await response.json();
         debugLog('✅ [Love Button] Server response:', data);
-        debugLog('🎨 [Love Button] Creating particle animation...');
+        debugLog('🎨 [Love Button] Creating particle animation for sender...');
         // Create particles when click is successful
         createParticles(); // Uses button position automatically
+        debugLog('🎨 [Love Button] Particle animation triggered for sender');
       } else {
         debugWarn('⚠️ [Love Button] Server returned error:', response.status, response.statusText);
       }
