@@ -22,7 +22,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
 
   // Check if current language is Japanese
   const isJapanese = i18n.language === 'ja';
-  
+
   // Helper function for conditional debugging
   const debugEnabled = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true'
   const debugLog = (message: string, ...args: any[]) => { if (debugEnabled) console.log(message, ...args) }
@@ -53,9 +53,9 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     debugLog(`[Love] Creating particles at position: ${startX}, ${startY}`);
 
     const baseCount = countOverride ?? (10 + Math.floor(Math.random() * 6)); // 10-15 hearts by default
-    
+
     // Different colors for Japanese (cat colors) vs other languages (heart colors)
-    const particleColors = isJapanese 
+    const particleColors = isJapanese
       ? ['#ff6b35', '#ffa500', '#ffb347', '#ff8c00', '#ff7f50'] // Cat colors: orange tones
       : ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80']; // Heart colors: pink/red tones
 
@@ -396,7 +396,6 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
                     color: particle.color,
                     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
                   }}
-                  fill={particle.color}
                 />
               ) : (
                 <Heart
