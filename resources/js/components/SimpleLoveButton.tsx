@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart } from 'lucide-react';
+import { Heart, Cat } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Particle } from '@/types/love';
@@ -10,6 +11,7 @@ interface SimpleLoveButtonProps {
 }
 
 export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className }) => {
+  const { i18n } = useTranslation();
   const [isClicking, setIsClicking] = useState<boolean>(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
@@ -18,6 +20,9 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
   const pollingIntervalRef = useRef<number | null>(null);
   const lastEventId = useRef<string>('');
 
+  // Check if current language is Japanese
+  const isJapanese = i18n.language === 'ja';
+  
   // Helper function for conditional debugging
   const debugEnabled = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true'
   const debugLog = (message: string, ...args: any[]) => { if (debugEnabled) console.log(message, ...args) }
@@ -48,7 +53,11 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     debugLog(`[Love] Creating particles at position: ${startX}, ${startY}`);
 
     const baseCount = countOverride ?? (10 + Math.floor(Math.random() * 6)); // 10-15 hearts by default
-    const heartColors = ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80'];
+    
+    // Different colors for Japanese (cat colors) vs other languages (heart colors)
+    const particleColors = isJapanese 
+      ? ['#ff6b35', '#ffa500', '#ffb347', '#ff8c00', '#ff7f50'] // Cat colors: orange tones
+      : ['#ff1744', '#e91e63', '#ff4569', '#ff6b6b', '#ff8a80']; // Heart colors: pink/red tones
 
     // Poisson-like sampling in 1D (x direction) to avoid overlap
     const samples: number[] = [];
@@ -77,7 +86,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         velocity: { x: 0, y: -3 },
         delay: i * 18 + Math.random() * 40, // waterfall upwards
         size: 0.6 + Math.random() * 0.7,
-        color: heartColors[Math.floor(Math.random() * heartColors.length)],
+        color: particleColors[Math.floor(Math.random() * particleColors.length)],
         drift,
         rise,
         duration,
@@ -239,6 +248,21 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     };
   }, []);
 
+  // Listen for language changes to update button appearance
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      // Force re-render when language changes
+      debugLog(`[Love] Language changed to: ${i18n.language}`);
+    };
+
+    // Listen for custom language change event from LanguageSwitcher
+    window.addEventListener('languageChanged', handleLanguageChange);
+
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+    };
+  }, [i18n.language, debugLog]);
+
   // Aggregate remote events to lighter bursts
   const pendingRemoteCount = useRef<number>(0);
   const flushTimer = useRef<number | null>(null);
@@ -365,20 +389,31 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
                 setParticles(prev => prev.filter(p => p.id !== particle.id));
               }}
             >
-              <Heart
-                className="w-full h-full filter drop-shadow-md"
-                style={{
-                  color: particle.color,
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-                }}
-                fill={particle.color}
-              />
+              {isJapanese ? (
+                <Cat
+                  className="w-full h-full filter drop-shadow-md"
+                  style={{
+                    color: particle.color,
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+                  }}
+                  fill={particle.color}
+                />
+              ) : (
+                <Heart
+                  className="w-full h-full filter drop-shadow-md"
+                  style={{
+                    color: particle.color,
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+                  }}
+                  fill={particle.color}
+                />
+              )}
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
-      {/* Love Button */}
+      {/* Love/Cat Button */}
       <Button
         ref={buttonRef}
         onClick={handleClick}
@@ -387,8 +422,9 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         size="sm"
         className={cn(
           'relative overflow-hidden group transition-all duration-300 p-2 rounded-full',
-          'hover:bg-red-50 hover:scale-110 dark:hover:bg-red-950/20',
-          'focus:bg-red-50 focus:scale-110 dark:focus:bg-red-950/20',
+          isJapanese
+            ? 'hover:bg-orange-50 hover:scale-110 dark:hover:bg-orange-950/20 focus:bg-orange-50 focus:scale-110 dark:focus:bg-orange-950/20'
+            : 'hover:bg-red-50 hover:scale-110 dark:hover:bg-red-950/20 focus:bg-red-50 focus:scale-110 dark:focus:bg-red-950/20',
           isClicking && 'scale-95',
           'w-10 h-10'
         )}
@@ -397,7 +433,10 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         <AnimatePresence>
           {isClicking && (
             <motion.div
-              className="absolute inset-0 bg-red-400/20 rounded-md"
+              className={cn(
+                'absolute inset-0 rounded-md',
+                isJapanese ? 'bg-orange-400/20' : 'bg-red-400/20'
+              )}
               initial={{ scale: 0, opacity: 0.6 }}
               animate={{ scale: 2, opacity: 0 }}
               exit={{ opacity: 0 }}
@@ -406,19 +445,30 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           )}
         </AnimatePresence>
 
-        {/* Heart Icon with Animation */}
+        {/* Heart/Cat Icon with Animation */}
         <motion.div
           animate={isClicking ? { scale: [1, 1.3, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
-          <Heart
-            className={cn(
-              'w-15 h-15 transition-colors duration-300',
-              isClicking
-                ? 'text-red-500 fill-red-500'
-                : 'text-red-400 group-hover:text-red-500 group-hover:fill-red-500'
-            )}
-          />
+          {isJapanese ? (
+            <Cat
+              className={cn(
+                'w-15 h-15 transition-colors duration-300',
+                isClicking
+                  ? 'text-orange-500 fill-orange-500'
+                  : 'text-orange-400 group-hover:text-orange-500 group-hover:fill-orange-500'
+              )}
+            />
+          ) : (
+            <Heart
+              className={cn(
+                'w-15 h-15 transition-colors duration-300',
+                isClicking
+                  ? 'text-red-500 fill-red-500'
+                  : 'text-red-400 group-hover:text-red-500 group-hover:fill-red-500'
+              )}
+            />
+          )}
         </motion.div>
 
         {/* Connection Status Indicator */}
