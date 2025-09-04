@@ -26,7 +26,14 @@
     "actions": {
       "convert": "Convert",
       "save": "Save",
-      "reset": "Reset"
+      "reset": "Reset",
+      "crop": "Crop",
+      "editCrop": "Edit Crop",
+      "removeCrop": "Remove Crop",
+      "cbOn": "Color‑Blind On",
+      "cbOff": "Color‑Blind Mode",
+      "apply": "Apply",
+      "cancel": "Cancel"
     },
     "safety": {
       "local": "100% Private! All processing happens locally in your browser - no uploads, no data collection."

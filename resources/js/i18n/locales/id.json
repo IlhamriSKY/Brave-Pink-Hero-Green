@@ -26,7 +26,14 @@
     "actions": {
       "convert": "Konversi",
       "save": "Simpan",
-      "reset": "Reset"
+      "reset": "Reset",
+      "crop": "Potong",
+      "editCrop": "Edit Potongan",
+      "removeCrop": "Hapus Potongan",
+      "cbOn": "Mode Buta Warna Aktif",
+      "cbOff": "Mode Buta Warna",
+      "apply": "Terapkan",
+      "cancel": "Batal"
     },
     "safety": {
       "local": "Privasi terjamin! Semua proses dilakukan di browser Anda tanpa upload ke server manapun."

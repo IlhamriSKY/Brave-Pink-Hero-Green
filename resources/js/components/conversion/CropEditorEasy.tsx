@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import Cropper, { Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +16,7 @@ export default function CropEditorEasy({
   onCancel: () => void
   className?: string
 }) {
+  const { t } = useTranslation()
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [area, setArea] = useState<Area | null>(null)
@@ -57,14 +59,14 @@ export default function CropEditorEasy({
           variant="secondary"
           onClick={onCancel}
         >
-          Cancel
+          {t('conversion.actions.cancel')}
         </Button>
         <Button
           size="sm"
           onClick={() => area && onConfirm(area)}
           disabled={!area}
         >
-          Apply
+          {t('conversion.actions.apply')}
         </Button>
       </div>
     </div>

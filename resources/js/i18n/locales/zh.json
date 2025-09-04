@@ -26,7 +26,14 @@
     "actions": {
       "convert": "转换",
       "save": "保存",
-      "reset": "重置"
+      "reset": "重置",
+      "crop": "裁剪",
+      "editCrop": "编辑裁剪",
+      "removeCrop": "移除裁剪",
+      "cbOn": "色盲模式 开启",
+      "cbOff": "色盲模式",
+      "apply": "应用",
+      "cancel": "取消"
     },
     "safety": {
       "local": "100%隐私保护！所有处理均在您的浏览器中完成，无需上传，不收集数据。"
