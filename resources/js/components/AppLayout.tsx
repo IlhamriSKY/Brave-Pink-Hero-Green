@@ -60,9 +60,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-background/70 backdrop-blur-xl border border-border/30 rounded-xl shadow-lg ring-1 ring-white/10">
                         <div className="py-3 sm:py-4 px-4 sm:px-6 flex items-center justify-between gap-4">
-                            {/* Logo & App Name */}
-                            <div className="flex items-center space-x-3 min-w-0">
-                                <div className="w-7 h-7 flex items-center justify-center shrink-0">
+                            {/* Logo & App Name - Clickable to Home */}
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="flex items-center space-x-3 min-w-0 hover:opacity-80 transition-opacity duration-200 cursor-pointer group"
+                                title="Back to Home"
+                            >
+                                <div className="w-7 h-7 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200">
                                     <img
                                         src="/logo.png"
                                         alt={t('accessibility.logoAlt')}
@@ -70,11 +74,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                     />
                                 </div>
                                 <div className="min-w-0">
-                                    <h1 className="text-lg font-bold text-foreground truncate">
+                                    <h1 className="text-lg font-bold text-foreground truncate group-hover:text-primary transition-colors duration-200">
                                         {t('hero.title')}
                                     </h1>
                                 </div>
-                            </div>
+                            </button>
 
                             {/* Navigation Menu (shadcn/ui) */}
                             <NavigationMenu>

@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title": "勇敢なピンクヒーローグリーン",
+    "title": "Brave Pink Hero Green",
     "description": "様々なエフェクトで画像を変換。高速で簡単な処理。",
     "uploadTitle": "ここに画像をドロップ",
     "uploadDescription": "画像ファイルをドラッグ＆ドロップするか、クリックして参照",
@@ -42,6 +42,9 @@
       "files": "枚の画像を処理"
     }
   },
+  "processing": {
+    "totalProcessed": "処理された画像数:"
+  },
   "navigation": {
     "github": "GitHubリポジトリ",
     "language": "言語"
@@ -59,13 +62,13 @@
   },
   "accessibility": {
     "imageAlt": "処理用にアップロードされた画像",
-    "logoAlt": "勇敢なピンクヒーローグリーン ロゴ",
+    "logoAlt": "Brave Pink Hero Green ロゴ",
     "compareSlider": "画像比較スライダー"
   },
   "footer": {
     "counter": "処理された画像",
-    "copyright": "© 2025 勇敢なピンクヒーローグリーン. 全著作権所有。",
-    "madeWith": "愛をこめて作られました",
-    "inspiredBy": "インスピレーション元"
+    "copyright": "© 2025 Brave Pink Hero Green. 全著作権所有。",
+    "madeWith": "で作られました",
+    "inspiredBy": "からインスピレーション"
   }
 }

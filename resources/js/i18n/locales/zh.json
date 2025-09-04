@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title": "勇敢的粉色英雄绿",
+    "title": "Brave Pink Hero Green",
     "description": "使用各种效果转换图像。快速简便的处理。",
     "uploadTitle": "将您的图像拖放到这里",
     "uploadDescription": "拖放图像文件，或点击浏览",
@@ -42,6 +42,9 @@
       "files": "张图像已处理"
     }
   },
+  "processing": {
+    "totalProcessed": "已处理图像数:"
+  },
   "navigation": {
     "github": "GitHub仓库",
     "language": "语言"
@@ -59,12 +62,12 @@
   },
   "accessibility": {
     "imageAlt": "上传的待处理图像",
-    "logoAlt": "勇敢的粉色英雄绿 标志",
+    "logoAlt": "Brave Pink Hero Green 标志",
     "compareSlider": "图像比较滑块"
   },
   "footer": {
     "counter": "已处理图像",
-    "copyright": "© 2025 勇敢的粉色英雄绿. 保留所有权利。",
+    "copyright": "© 2025 Brave Pink Hero Green. 保留所有权利。",
     "madeWith": "用爱制作",
     "inspiredBy": "灵感来自"
   }
