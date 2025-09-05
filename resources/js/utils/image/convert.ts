@@ -151,7 +151,7 @@ export async function applyConversion(image: HTMLImageElement, mode: ConversionM
         if (options.customColors.lightColor) {
           GREEN = options.customColors.lightColor
         }
-        
+
         // Apply intensity adjustments
         if (options.customColors.darkIntensity !== undefined) {
           const intensity = options.customColors.darkIntensity

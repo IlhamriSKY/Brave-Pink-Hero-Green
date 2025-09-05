@@ -445,8 +445,8 @@ export default function ConversionPanel({
         <Card>
           <CardContent className="p-6">
             <Accordion type="single" collapsible>
-              <AccordionItem value="advanced-settings">
-                <AccordionTrigger>
+              <AccordionItem value="advanced-settings" className="border-0">
+                <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
                     <span className="font-medium">{t('conversion.advanced.title')}</span>
@@ -460,33 +460,23 @@ export default function ConversionPanel({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-xs text-muted-foreground">{t('conversion.advanced.darkColor')}</label>
-                          <div className="flex items-center gap-2">
-                            <ColorPicker
-                              value={advancedSettings.darkColor}
-                              onChange={(color) => setAdvancedSettings(prev => ({
-                                ...prev,
-                                darkColor: color
-                              }))}
-                            />
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {advancedSettings.darkColor}
-                            </span>
-                          </div>
+                          <ColorPicker
+                            value={advancedSettings.darkColor}
+                            onChange={(color) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              darkColor: color
+                            }))}
+                          />
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs text-muted-foreground">{t('conversion.advanced.lightColor')}</label>
-                          <div className="flex items-center gap-2">
-                            <ColorPicker
-                              value={advancedSettings.lightColor}
-                              onChange={(color) => setAdvancedSettings(prev => ({
-                                ...prev,
-                                lightColor: color
-                              }))}
-                            />
-                            <span className="text-xs text-muted-foreground font-mono">
-                              {advancedSettings.lightColor}
-                            </span>
-                          </div>
+                          <ColorPicker
+                            value={advancedSettings.lightColor}
+                            onChange={(color) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              lightColor: color
+                            }))}
+                          />
                         </div>
                       </div>
                     </div>
