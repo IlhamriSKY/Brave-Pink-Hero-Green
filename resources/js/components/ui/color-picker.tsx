@@ -1,5 +1,6 @@
 import * as React from "react"
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { ChromePicker, ColorResult } from 'react-color'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,31 +16,48 @@ const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
   ({ value, onChange, className, disabled, ...props }, ref) => {
     const [showPicker, setShowPicker] = useState(false)
 
-    // Common color presets
-    const presetColors = [
-      "#f784c5", "#1b602f", "#ff6b6b", "#4ecdc4", "#45b7d1", 
-      "#96ceb4", "#ffeaa7", "#dda0dd", "#98d8c8", "#f7dc6f",
-      "#bb8fce", "#85c1e9", "#f8c471", "#82e0aa", "#f1948a",
-      "#000000", "#ffffff", "#808080", "#ff0000", "#00ff00", "#0000ff"
-    ]
+    const handleTogglePicker = useCallback(() => {
+      if (!disabled) {
+        setShowPicker(prev => !prev)
+      }
+    }, [disabled])
+
+    const handleColorChange = useCallback((color: ColorResult) => {
+      onChange(color.hex)
+    }, [onChange])
+
+    const handleColorChangeComplete = useCallback((color: ColorResult) => {
+      onChange(color.hex)
+    }, [onChange])
+
+    const handleClose = useCallback(() => {
+      setShowPicker(false)
+    }, [])
+
+    const handleHexChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const hexValue = e.target.value
+      if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+        onChange(hexValue)
+      }
+    }, [onChange])
 
     return (
-      <div className={cn("relative inline-block", className)}>
-        <div className="flex items-center gap-2">
+      <div className={cn("relative", className)}>
+        <div className="flex items-center gap-2 w-full">
           {/* Color Swatch Button */}
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="w-12 h-8 p-0 border-2"
+            className="w-8 h-8 p-0 border-2 border-border flex-shrink-0 hover:scale-105 transition-transform duration-150"
             style={{ backgroundColor: value }}
-            onClick={() => setShowPicker(!showPicker)}
+            onClick={handleTogglePicker}
             disabled={disabled}
           >
             <span className="sr-only">Pick color</span>
           </Button>
-          
-          {/* Hidden HTML5 Color Input */}
+
+          {/* Hidden HTML5 Color Input for accessibility */}
           <input
             ref={ref}
             type="color"
@@ -49,83 +67,106 @@ const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
             className="sr-only"
             {...props}
           />
-          
+
           {/* Hex Input */}
           <Input
             type="text"
-            value={value}
-            onChange={(e) => {
-              const hexValue = e.target.value
-              if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
-                onChange(hexValue)
-              }
-            }}
-            className="w-20 h-8 text-xs font-mono"
+            value={value.toUpperCase()}
+            onChange={handleHexChange}
+            className="flex-1 h-8 text-xs font-mono bg-background border-border"
             placeholder="#000000"
             disabled={disabled}
           />
         </div>
 
-        {/* Color Preset Popup */}
+        {/* React Color Picker - Direct SketchPicker without presets */}
         {showPicker && (
-          <div className="absolute top-full left-0 mt-2 p-3 bg-background border rounded-lg shadow-lg z-50 min-w-[200px]">
-            <div className="grid grid-cols-7 gap-1 mb-3">
-              {presetColors.map((color) => (
-                <Button
-                  key={color}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-6 h-6 p-0 border"
-                  style={{ backgroundColor: color }}
-                  onClick={() => {
-                    onChange(color)
-                    setShowPicker(false)
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={handleClose}
+            />
+
+            {/* Color Picker Popup - Compact & Styled */}
+            <div className="absolute top-full left-0 mt-2 z-50">
+              <div className="bg-background border border-border rounded-lg shadow-lg p-2 w-[200px]">
+                <style>{`
+                  .chrome-picker input {
+                    background-color: hsl(var(--background)) !important;
+                    border: 1px solid hsl(var(--border)) !important;
+                    border-radius: 4px !important;
+                    color: hsl(var(--foreground)) !important;
+                    font-size: 11px !important;
+                    padding: 2px 4px !important;
+                    box-shadow: none !important;
+                  }
+                  .chrome-picker label {
+                    color: hsl(var(--muted-foreground)) !important;
+                    font-size: 10px !important;
+                  }
+                  .chrome-picker .hue-horizontal {
+                    border-radius: 6px !important;
+                  }
+                  .chrome-picker .hue-horizontal .hue-pointer {
+                    border-radius: 50% !important;
+                    transform: translate(-6px, -2px) !important;
+                  }
+                  .chrome-picker .saturation-white {
+                    border-radius: 6px !important;
+                  }
+                  .chrome-picker .saturation-black {
+                    border-radius: 6px !important;
+                  }
+                  .chrome-picker .chrome-controls {
+                    display: flex !important;
+                    align-items: center !important;
+                  }
+                  .chrome-picker .chrome-color {
+                    display: none !important;
+                  }
+                  .chrome-picker .chrome-sliders {
+                    flex: 1 !important;
+                  }
+                  .chrome-picker .chrome-controls > div:first-child {
+                    display: none !important;
+                  }
+                  .chrome-picker .chrome-body .chrome-controls .chrome-color {
+                    display: none !important;
+                  }
+                  .chrome-picker div[style*="width: 22px"] {
+                    display: none !important;
+                  }
+                `}</style>
+                <ChromePicker
+                  color={value}
+                  onChange={handleColorChange}
+                  onChangeComplete={handleColorChangeComplete}
+                  disableAlpha={true}
+                  styles={{
+                    default: {
+                      picker: {
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        boxShadow: 'none',
+                        width: '100%',
+                        fontFamily: 'inherit',
+                      },
+                      saturation: {
+                        borderRadius: '6px',
+                        height: '100px',
+                      },
+                      hue: {
+                        borderRadius: '6px',
+                        height: '8px',
+                        marginTop: '4px',
+                      },
+                    },
                   }}
-                  title={color}
-                >
-                  <span className="sr-only">{color}</span>
-                </Button>
-              ))}
+                />
+              </div>
             </div>
-            
-            {/* Custom Color Picker */}
-            <div className="border-t pt-3">
-              <label className="text-xs text-muted-foreground mb-1 block">
-                Custom Color
-              </label>
-              <input
-                type="color"
-                value={value}
-                onChange={(e) => {
-                  onChange(e.target.value)
-                  setShowPicker(false)
-                }}
-                className="w-full h-8 border border-input rounded cursor-pointer"
-                aria-label="Custom color picker"
-                title="Pick a custom color"
-              />
-            </div>
-            
-            {/* Close Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full mt-2"
-              onClick={() => setShowPicker(false)}
-            >
-              Close
-            </Button>
-          </div>
-        )}
-        
-        {/* Backdrop to close picker */}
-        {showPicker && (
-          <div 
-            className="fixed inset-0 z-40"
-            onClick={() => setShowPicker(false)}
-          />
+          </>
         )}
       </div>
     )

@@ -71,6 +71,11 @@ export default function ConversionPanel({
   const [error, setError] = useState('')
   const [isDragOver, setIsDragOver] = useState(false)
 
+  // Floating preview states
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false)
+  const [isMainPreviewVisible, setIsMainPreviewVisible] = useState<boolean>(true)
+  const [showFloatingPreview, setShowFloatingPreview] = useState<boolean>(false)
+
   // Advanced settings state
   const [advancedSettings, setAdvancedSettings] = useState({
     darkColor: rgbToHex(DUOTONE_COLORS.PINK),
@@ -83,6 +88,7 @@ export default function ConversionPanel({
 
   // Refs for DOM elements
   const dragRef = useRef<HTMLDivElement | null>(null)
+  const mainPreviewRef = useRef<HTMLDivElement | null>(null)
 
   /**
    * Load processing counter from database on component mount
@@ -92,10 +98,47 @@ export default function ConversionPanel({
   }, [])
 
   /**
+   * Intersection Observer to track main preview visibility
+   */
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        setIsMainPreviewVisible(entry.isIntersecting)
+
+        // Show floating preview if advanced is open and main preview is not visible
+        setShowFloatingPreview(isAdvancedOpen && !entry.isIntersecting && !!convertedSrc)
+      },
+      {
+        threshold: 0.1, // Trigger when 10% of the element is visible
+        rootMargin: '0px 0px -50px 0px' // Add some margin to trigger earlier
+      }
+    )
+
+    if (mainPreviewRef.current) {
+      observer.observe(mainPreviewRef.current)
+    }
+
+    return () => {
+      if (mainPreviewRef.current) {
+        observer.unobserve(mainPreviewRef.current)
+      }
+    }
+  }, [isAdvancedOpen, convertedSrc])
+
+  /**
+   * Update floating preview visibility when advanced accordion state changes
+   */
+  useEffect(() => {
+    setShowFloatingPreview(isAdvancedOpen && !isMainPreviewVisible && !!convertedSrc)
+  }, [isAdvancedOpen, isMainPreviewVisible, convertedSrc])
+
+  /**
    * Auto-convert image when conversion mode or advanced settings change (if image is loaded)
    */
   useEffect(() => {
     if (originalImage) {
+      // Auto-convert without counter increment
       handleConvert()
     }
   }, [conversionMode, originalImage, cropArea, colorBlindMode, advancedSettings])
@@ -153,6 +196,9 @@ export default function ConversionPanel({
       setOriginalCroppedSrc(null)
       setConvertedSrc(img.src) // Initially show original
 
+      // Increment counter only on file upload
+      await incrementCounter(file.name)
+
     } catch (err) {
       console.error('Error loading image:', err)
       setError(t('errors.processingError'))
@@ -161,11 +207,9 @@ export default function ConversionPanel({
 
   /**
    * Handles image conversion with the selected mode and advanced settings
-   * Updates counter using database with race condition protection
    */
   const handleConvert = async (
-    baseOverride?: HTMLImageElement | null,
-    opts?: { skipIncrement?: boolean }
+    baseOverride?: HTMLImageElement | null
   ): Promise<void> => {
     if (!originalImage) return
 
@@ -197,9 +241,7 @@ export default function ConversionPanel({
       const result = await applyConversion(baseImage, conversionMode, conversionOptions)
       setConvertedSrc(result)
 
-      if (!opts?.skipIncrement) {
-        await incrementCounter(selectedFile?.name || 'converted_image.png')
-      }
+      // Counter is only incremented on file upload, not on conversion
     } catch (err) {
       console.error('Conversion error:', err)
       setError(t('errors.processingError'))
@@ -219,7 +261,7 @@ export default function ConversionPanel({
       setOriginalCroppedSrc(before)
       setConvertedSrc(result)
       setIsCropping(false)
-      await incrementCounter(selectedFile?.name || 'converted_image.png')
+      // No counter increment for crop operations
     } catch (e) {
       console.error('Crop error:', e)
       setError(t('errors.processingError'))
@@ -330,7 +372,7 @@ export default function ConversionPanel({
 
       {/* Preview in Single Column Card (no loading spinner for seamless UX) */}
       {originalSrc && (
-        <Card>
+        <Card ref={mainPreviewRef}>
           <CardContent className="p-6">
               <div className={cn('bg-muted overflow-hidden flex items-center justify-center relative rounded-lg')}>
               {convertedSrc && originalSrc ? (
@@ -396,7 +438,7 @@ export default function ConversionPanel({
                 </Button>
                 {originalCroppedSrc && (
                   <Button
-                    onClick={() => { setOriginalCroppedSrc(null); setCropArea(null); if (originalImage) handleConvert(originalImage, { skipIncrement: true }) }}
+                    onClick={() => { setOriginalCroppedSrc(null); setCropArea(null); if (originalImage) handleConvert(originalImage) }}
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto sm:min-w-[7rem]"
@@ -443,48 +485,59 @@ export default function ConversionPanel({
       {/* Advanced Settings Card */}
       {originalSrc && (
         <Card>
-          <CardContent className="p-6">
-            <Accordion type="single" collapsible>
+          <CardContent className="p-0">
+            <Accordion
+              type="single"
+              collapsible
+              value={isAdvancedOpen ? "advanced-settings" : undefined}
+              onValueChange={(value) => setIsAdvancedOpen(value === "advanced-settings")}
+            >
               <AccordionItem value="advanced-settings" className="border-0">
-                <AccordionTrigger className="py-2 hover:no-underline">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
                     <span className="font-medium">{t('conversion.advanced.title')}</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-6 pt-4">
+                <AccordionContent className="px-4 pb-4">
+                  <div className="space-y-4 pt-2">
                     {/* Gradient Colors */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.gradientColors')}</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-xs text-muted-foreground">{t('conversion.advanced.darkColor')}</label>
-                          <ColorPicker
-                            value={advancedSettings.darkColor}
-                            onChange={(color) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              darkColor: color
-                            }))}
-                          />
+                          <label className="text-xs font-medium text-muted-foreground">{t('conversion.advanced.darkColor')}</label>
+                          <div className="w-full">
+                            <ColorPicker
+                              value={advancedSettings.darkColor}
+                              onChange={(color) => setAdvancedSettings(prev => ({
+                                ...prev,
+                                darkColor: color
+                              }))}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs text-muted-foreground">{t('conversion.advanced.lightColor')}</label>
-                          <ColorPicker
-                            value={advancedSettings.lightColor}
-                            onChange={(color) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              lightColor: color
-                            }))}
-                          />
+                          <label className="text-xs font-medium text-muted-foreground">{t('conversion.advanced.lightColor')}</label>
+                          <div className="w-full">
+                            <ColorPicker
+                              value={advancedSettings.lightColor}
+                              onChange={(color) => setAdvancedSettings(prev => ({
+                                ...prev,
+                                lightColor: color
+                              }))}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Intensity Controls */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.colorIntensity')}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
                             <label className="text-xs text-muted-foreground">{t('conversion.advanced.darkIntensity')}</label>
@@ -527,9 +580,9 @@ export default function ConversionPanel({
                     </div>
 
                     {/* Image Adjustments */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.imageAdjustments')}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
                             <label className="text-xs text-muted-foreground">{t('conversion.advanced.contrast')}</label>
@@ -572,7 +625,7 @@ export default function ConversionPanel({
                     </div>
 
                     {/* Reset Button */}
-                    <div className="pt-4 border-t">
+                    <div className="pt-3 border-t">
                       <Button
                         onClick={() => setAdvancedSettings({
                           darkColor: rgbToHex(DUOTONE_COLORS.PINK),
@@ -638,6 +691,21 @@ export default function ConversionPanel({
           </div>
         </div>
       </div>
+
+      {/* Floating Preview - Only show when advanced is open and main preview is not visible */}
+      {showFloatingPreview && convertedSrc && (
+        <div className="fixed bottom-4 left-4 z-50 transition-all duration-300 ease-in-out">
+          <Card className="w-32 shadow-xl border border-gray-200/50 bg-white/95 backdrop-blur-sm">
+            <CardContent className="p-1">
+              <img
+                src={convertedSrc}
+                alt="Floating preview"
+                className="w-full h-auto rounded-md border border-gray-200 max-h-[80px] object-contain bg-gray-50/50"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
