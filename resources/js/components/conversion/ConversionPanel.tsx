@@ -4,6 +4,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Slider } from '@/components/ui/slider'
+import { ColorPicker } from '@/components/ui/color-picker'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import ConversionModes from './ConversionModes'
 import { Comparison } from '@/components/ui/comparison'
 import CropEditorEasy from './CropEditorEasy'
@@ -16,8 +24,11 @@ import { useHybridCounter } from '@/hooks/useHybridCounter'
     type ConversionMode,
     type ConversionOptions,
     cropCircleFromRect,
+    hexToRgb,
+    rgbToHex,
+    DUOTONE_COLORS,
   } from '@/utils/image/convert'
-import { Download, Upload, FileUp, Cat, Shield, AlertCircle, RotateCcw, Crop, Palette } from 'lucide-react'
+import { Download, Upload, FileUp, Cat, Shield, AlertCircle, RotateCcw, Crop, Palette, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -60,6 +71,16 @@ export default function ConversionPanel({
   const [error, setError] = useState('')
   const [isDragOver, setIsDragOver] = useState(false)
 
+  // Advanced settings state
+  const [advancedSettings, setAdvancedSettings] = useState({
+    darkColor: rgbToHex(DUOTONE_COLORS.PINK),
+    lightColor: rgbToHex(DUOTONE_COLORS.GREEN),
+    darkIntensity: 1.0,
+    lightIntensity: 1.0,
+    contrast: 1.15,
+    brightness: 0.0,
+  })
+
   // Refs for DOM elements
   const dragRef = useRef<HTMLDivElement | null>(null)
 
@@ -71,13 +92,13 @@ export default function ConversionPanel({
   }, [])
 
   /**
-   * Auto-convert image when conversion mode changes (if image is loaded)
+   * Auto-convert image when conversion mode or advanced settings change (if image is loaded)
    */
   useEffect(() => {
     if (originalImage) {
       handleConvert()
     }
-  }, [conversionMode, originalImage, cropArea, colorBlindMode])
+  }, [conversionMode, originalImage, cropArea, colorBlindMode, advancedSettings])
 
   /**
    * Validates uploaded file for type and size constraints
@@ -139,7 +160,7 @@ export default function ConversionPanel({
   }
 
   /**
-   * Handles image conversion with the selected mode
+   * Handles image conversion with the selected mode and advanced settings
    * Updates counter using database with race condition protection
    */
   const handleConvert = async (
@@ -160,7 +181,20 @@ export default function ConversionPanel({
         baseImage = tmp
       }
 
-      const result = await applyConversion(baseImage, conversionMode, { colorBlind: colorBlindMode })
+      // Prepare conversion options with advanced settings
+      const conversionOptions: ConversionOptions = {
+        colorBlind: colorBlindMode,
+        customColors: {
+          darkColor: hexToRgb(advancedSettings.darkColor),
+          lightColor: hexToRgb(advancedSettings.lightColor),
+          darkIntensity: advancedSettings.darkIntensity,
+          lightIntensity: advancedSettings.lightIntensity,
+          contrast: advancedSettings.contrast,
+          brightness: advancedSettings.brightness,
+        }
+      }
+
+      const result = await applyConversion(baseImage, conversionMode, conversionOptions)
       setConvertedSrc(result)
 
       if (!opts?.skipIncrement) {
@@ -402,6 +436,174 @@ export default function ConversionPanel({
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Advanced Settings Card */}
+      {originalSrc && (
+        <Card>
+          <CardContent className="p-6">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="advanced-settings">
+                <AccordionTrigger>
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    <span className="font-medium">{t('conversion.advanced.title')}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6 pt-4">
+                    {/* Gradient Colors */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.gradientColors')}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground">{t('conversion.advanced.darkColor')}</label>
+                          <div className="flex items-center gap-2">
+                            <ColorPicker
+                              value={advancedSettings.darkColor}
+                              onChange={(color) => setAdvancedSettings(prev => ({
+                                ...prev,
+                                darkColor: color
+                              }))}
+                            />
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {advancedSettings.darkColor}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground">{t('conversion.advanced.lightColor')}</label>
+                          <div className="flex items-center gap-2">
+                            <ColorPicker
+                              value={advancedSettings.lightColor}
+                              onChange={(color) => setAdvancedSettings(prev => ({
+                                ...prev,
+                                lightColor: color
+                              }))}
+                            />
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {advancedSettings.lightColor}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Intensity Controls */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.colorIntensity')}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs text-muted-foreground">{t('conversion.advanced.darkIntensity')}</label>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(advancedSettings.darkIntensity * 100)}%
+                            </span>
+                          </div>
+                          <Slider
+                            value={[advancedSettings.darkIntensity]}
+                            onValueChange={([value]) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              darkIntensity: value
+                            }))}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs text-muted-foreground">{t('conversion.advanced.lightIntensity')}</label>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(advancedSettings.lightIntensity * 100)}%
+                            </span>
+                          </div>
+                          <Slider
+                            value={[advancedSettings.lightIntensity]}
+                            onValueChange={([value]) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              lightIntensity: value
+                            }))}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Image Adjustments */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-foreground">{t('conversion.advanced.imageAdjustments')}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs text-muted-foreground">{t('conversion.advanced.contrast')}</label>
+                            <span className="text-xs text-muted-foreground">
+                              {advancedSettings.contrast.toFixed(2)}
+                            </span>
+                          </div>
+                          <Slider
+                            value={[advancedSettings.contrast]}
+                            onValueChange={([value]) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              contrast: value
+                            }))}
+                            min={0.5}
+                            max={2}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs text-muted-foreground">{t('conversion.advanced.brightness')}</label>
+                            <span className="text-xs text-muted-foreground">
+                              {advancedSettings.brightness > 0 ? '+' : ''}{advancedSettings.brightness.toFixed(2)}
+                            </span>
+                          </div>
+                          <Slider
+                            value={[advancedSettings.brightness]}
+                            onValueChange={([value]) => setAdvancedSettings(prev => ({
+                              ...prev,
+                              brightness: value
+                            }))}
+                            min={-1}
+                            max={1}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reset Button */}
+                    <div className="pt-4 border-t">
+                      <Button
+                        onClick={() => setAdvancedSettings({
+                          darkColor: rgbToHex(DUOTONE_COLORS.PINK),
+                          lightColor: rgbToHex(DUOTONE_COLORS.GREEN),
+                          darkIntensity: 1.0,
+                          lightIntensity: 1.0,
+                          contrast: 1.15,
+                          brightness: 0.0,
+                        })}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        {t('conversion.advanced.resetDefaults')}
+                      </Button>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardContent>
         </Card>
       )}

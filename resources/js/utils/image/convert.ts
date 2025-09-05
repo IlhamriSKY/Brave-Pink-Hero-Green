@@ -15,6 +15,24 @@ export type ConversionMode = typeof CONVERSION_MODES[keyof typeof CONVERSION_MOD
 
 type RGB = [number, number, number]
 
+// Utility function to convert hex color to RGB
+export function hexToRgb(hex: string): RGB {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!result) {
+    throw new Error('Invalid hex color')
+  }
+  return [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+  ]
+}
+
+// Utility function to convert RGB to hex
+export function rgbToHex(rgb: RGB): string {
+  return "#" + rgb.map(c => Math.round(c).toString(16).padStart(2, '0')).join('')
+}
+
 // Exact reference colors
 export const DUOTONE_COLORS: { PINK: RGB; GREEN: RGB } = {
   PINK: [247, 132, 197], // #f784c5
@@ -99,13 +117,21 @@ export type ConversionOptions = {
   circleCrop?: boolean
   circle?: { cx: number; cy: number; r: number; unit?: 'relative' | 'pixel' }
   colorBlind?: boolean
+  customColors?: {
+    darkColor?: RGB
+    lightColor?: RGB
+    darkIntensity?: number // 0-1
+    lightIntensity?: number // 0-1
+    contrast?: number // 0-2
+    brightness?: number // -1 to 1
+  }
 }
 
 export async function applyConversion(image: HTMLImageElement, mode: ConversionMode, options?: ConversionOptions): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d', { willReadFrequently: true } as any)
+      const ctx = canvas.getContext('2d', { willReadFrequently: true } as any) as CanvasRenderingContext2D
       if (!ctx) return reject(new Error('Canvas context not available'))
 
       canvas.width = image.naturalWidth || image.width
@@ -114,27 +140,43 @@ export async function applyConversion(image: HTMLImageElement, mode: ConversionM
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
-      const PINK: RGB = DUOTONE_COLORS.PINK
-      const GREEN: RGB = DUOTONE_COLORS.GREEN
+      let PINK: RGB = DUOTONE_COLORS.PINK
+      let GREEN: RGB = DUOTONE_COLORS.GREEN
+
+      // Apply custom colors if provided
+      if (options?.customColors) {
+        if (options.customColors.darkColor) {
+          PINK = options.customColors.darkColor
+        }
+        if (options.customColors.lightColor) {
+          GREEN = options.customColors.lightColor
+        }
+        
+        // Apply intensity adjustments
+        if (options.customColors.darkIntensity !== undefined) {
+          const intensity = options.customColors.darkIntensity
+          PINK = PINK.map(c => Math.round(c * intensity)) as RGB
+        }
+        if (options.customColors.lightIntensity !== undefined) {
+          const intensity = options.customColors.lightIntensity
+          GREEN = GREEN.map(c => Math.round(c * intensity)) as RGB
+        }
+      }
 
       let processed = imageData
+      const customOpts = {
+        contrast: options?.customColors?.contrast ?? (options?.colorBlind ? 1.25 : 1.15),
+        bias: options?.customColors?.brightness ?? 0,
+        desat: options?.colorBlind ? 0.35 : 0
+      }
+
       switch (mode) {
         case CONVERSION_MODES.DUOTONE_PG:
           // shadows → first, highlights → second
-          processed = applyDuotoneData(
-            imageData,
-            PINK,
-            GREEN,
-            options?.colorBlind ? { contrast: 1.25, desat: 0.35 } : { contrast: 1.15 }
-          )
+          processed = applyDuotoneData(imageData, PINK, GREEN, customOpts)
           break
         case CONVERSION_MODES.DUOTONE_GP:
-          processed = applyDuotoneData(
-            imageData,
-            GREEN,
-            PINK,
-            options?.colorBlind ? { contrast: 1.25, desat: 0.35 } : { contrast: 1.15 }
-          )
+          processed = applyDuotoneData(imageData, GREEN, PINK, customOpts)
           break
         default:
           processed = imageData

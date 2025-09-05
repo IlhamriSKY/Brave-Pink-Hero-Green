@@ -35,6 +35,19 @@
       "apply": "適用",
       "cancel": "キャンセル"
     },
+    "advanced": {
+      "title": "詳細設定",
+      "gradientColors": "グラデーション色",
+      "darkColor": "暗い色",
+      "lightColor": "明るい色",
+      "colorIntensity": "色の強度",
+      "darkIntensity": "暗い部分の強度",
+      "lightIntensity": "明るい部分の強度",
+      "imageAdjustments": "画像調整",
+      "contrast": "コントラスト",
+      "brightness": "明度",
+      "resetDefaults": "デフォルトにリセット"
+    },
     "safety": {
       "local": "完全プライベート！すべての処理はブラウザ内で完結。アップロードもデータ収集もありません。"
     },

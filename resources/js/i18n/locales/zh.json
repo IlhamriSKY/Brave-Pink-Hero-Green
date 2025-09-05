@@ -35,6 +35,19 @@
       "apply": "应用",
       "cancel": "取消"
     },
+    "advanced": {
+      "title": "高级设置",
+      "gradientColors": "渐变颜色",
+      "darkColor": "深色",
+      "lightColor": "浅色",
+      "colorIntensity": "颜色强度",
+      "darkIntensity": "深色强度",
+      "lightIntensity": "浅色强度",
+      "imageAdjustments": "图像调整",
+      "contrast": "对比度",
+      "brightness": "亮度",
+      "resetDefaults": "重置为默认值"
+    },
     "safety": {
       "local": "100%隐私保护！所有处理均在您的浏览器中完成，无需上传，不收集数据。"
     },

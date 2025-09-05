@@ -35,6 +35,19 @@
       "apply": "Apply",
       "cancel": "Cancel"
     },
+    "advanced": {
+      "title": "Advanced Settings",
+      "gradientColors": "Gradient Colors",
+      "darkColor": "Dark Color",
+      "lightColor": "Light Color",
+      "colorIntensity": "Color Intensity",
+      "darkIntensity": "Dark Intensity",
+      "lightIntensity": "Light Intensity",
+      "imageAdjustments": "Image Adjustments",
+      "contrast": "Contrast",
+      "brightness": "Brightness",
+      "resetDefaults": "Reset to Defaults"
+    },
     "safety": {
       "local": "100% Private! All processing happens locally in your browser - no uploads, no data collection."
     },

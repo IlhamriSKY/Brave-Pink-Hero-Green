@@ -35,6 +35,19 @@
       "apply": "Terapkan",
       "cancel": "Batal"
     },
+    "advanced": {
+      "title": "Pengaturan Lanjutan",
+      "gradientColors": "Warna Gradien",
+      "darkColor": "Warna Gelap",
+      "lightColor": "Warna Terang",
+      "colorIntensity": "Intensitas Warna",
+      "darkIntensity": "Intensitas Gelap",
+      "lightIntensity": "Intensitas Terang",
+      "imageAdjustments": "Penyesuaian Gambar",
+      "contrast": "Kontras",
+      "brightness": "Kecerahan",
+      "resetDefaults": "Reset ke Default"
+    },
     "safety": {
       "local": "Privasi terjamin! Semua proses dilakukan di browser Anda tanpa upload ke server manapun."
     },

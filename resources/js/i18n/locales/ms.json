@@ -35,6 +35,19 @@
       "apply": "Gunakan",
       "cancel": "Batal"
     },
+    "advanced": {
+      "title": "Tetapan Lanjutan",
+      "gradientColors": "Warna Kecerunan",
+      "darkColor": "Warna Gelap",
+      "lightColor": "Warna Terang",
+      "colorIntensity": "Keamatan Warna",
+      "darkIntensity": "Keamatan Gelap",
+      "lightIntensity": "Keamatan Terang",
+      "imageAdjustments": "Penyesuaian Imej",
+      "contrast": "Kontras",
+      "brightness": "Kecerahan",
+      "resetDefaults": "Set Semula ke Lalai"
+    },
     "safety": {
       "local": "Privasi terjamin! Semua proses dilakukan dalam pelayar anda tanpa dimuat naik ke mana-mana pelayan."
     },
