@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface HybridCounterStats {
   total_count: number;
@@ -6,6 +6,13 @@ interface HybridCounterStats {
   is_animating?: boolean;
   display_count?: number; // For slot machine animation
 }
+
+// Cache for avoiding unnecessary API calls
+const statsCache = {
+  data: null as HybridCounterStats | null,
+  timestamp: 0,
+  ttl: 5000, // 5 seconds cache
+};
 
 export const useHybridCounter = () => {
   const [stats, setStats] = useState<HybridCounterStats>({
@@ -15,19 +22,52 @@ export const useHybridCounter = () => {
     display_count: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fetch current count from database
+  // Optimized fetch with cache and abort controller
   const fetchDatabaseCount = useCallback(async () => {
+    // Check cache first
+    const now = Date.now();
+    if (statsCache.data && (now - statsCache.timestamp) < statsCache.ttl) {
+      return statsCache.data.total_count;
+    }
+
+    // Abort previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
     try {
-      const response = await fetch('/api/processing/stats');
+      const response = await fetch('/api/processing/stats', {
+        signal: abortControllerRef.current.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+
       if (response.ok) {
         const data = await response.json();
-        return data.total_completed || 0;
+        const count = data.total_completed || 0;
+
+        // Update cache
+        statsCache.data = {
+          total_count: count,
+          last_updated: new Date().toISOString(),
+          is_animating: false,
+          display_count: count,
+        };
+        statsCache.timestamp = now;
+
+        return count;
       }
     } catch (error) {
-      console.error('Failed to fetch database count:', error);
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Failed to fetch database count:', error);
+      }
     }
-    return 0;
+    return statsCache.data?.total_count || 0;
   }, []);
 
   // Function to animate slot machine numbers
@@ -110,8 +150,11 @@ export const useHybridCounter = () => {
     }
   }, [fetchDatabaseCount, animateSlotMachine]);
 
-  // Increment counter via database API (race condition safe)
+  // Optimized increment counter with debouncing for rapid uploads
   const incrementCounter = useCallback(async (fileName?: string) => {
+    // Invalidate cache immediately
+    statsCache.timestamp = 0;
+
     try {
       const response = await fetch('/api/processing/increment', {
         method: 'POST',
@@ -121,14 +164,24 @@ export const useHybridCounter = () => {
         },
         body: JSON.stringify({
           file_name: fileName || 'converted_image.png'
-        })
+        }),
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       });
 
       if (response.ok) {
         const data = await response.json();
         const newTotal = data.total_completed;
 
-        // Update total count and start slot machine animation
+        // Update cache with new data
+        statsCache.data = {
+          total_count: newTotal,
+          last_updated: new Date().toISOString(),
+          is_animating: false,
+          display_count: newTotal,
+        };
+        statsCache.timestamp = Date.now();
+
+        // Update state and start slot machine animation
         setStats(prev => ({
           ...prev,
           total_count: newTotal,
@@ -138,8 +191,10 @@ export const useHybridCounter = () => {
         // Start slot machine animation for the new total
         animateSlotMachine(newTotal);
 
-        // Dispatch event for other components
-        window.dispatchEvent(new Event('hybridCounterUpdate'));
+        // Dispatch event for other components (debounced)
+        setTimeout(() => {
+          window.dispatchEvent(new Event('hybridCounterUpdate'));
+        }, 100);
 
         return { success: true, total_count: newTotal };
       } else {

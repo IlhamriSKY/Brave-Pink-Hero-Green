@@ -83,5 +83,10 @@
     "copyright": "© 2025 Brave Pink Hero Green. 保留所有权利。",
     "madeWith": "用爱制作",
     "inspiredBy": "灵感来自"
+  },
+  "colorPicker": {
+    "hexPlaceholder": "#000000",
+    "apply": "应用",
+    "cancel": "取消"
   }
 }

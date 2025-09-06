@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -75,6 +75,8 @@ export default function ConversionPanel({
   const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false)
   const [isMainPreviewVisible, setIsMainPreviewVisible] = useState<boolean>(true)
   const [showFloatingPreview, setShowFloatingPreview] = useState<boolean>(false)
+  const [dragPosition, setDragPosition] = useState({ x: 16, y: 0 })
+  const [isDragging, setIsDragging] = useState<boolean>(false)
 
   // Advanced settings state
   const [advancedSettings, setAdvancedSettings] = useState({
@@ -86,7 +88,33 @@ export default function ConversionPanel({
     brightness: 0.0,
   })
 
-  // Refs for DOM elements
+  // Debounced advanced settings for better performance
+  const [debouncedAdvancedSettings, setDebouncedAdvancedSettings] = useState(advancedSettings)
+
+  // Initialize drag position when floating preview is first shown
+  useEffect(() => {
+    if (showFloatingPreview && dragPosition.x === 16 && dragPosition.y === 0) {
+      setDragPosition({ x: 16, y: Math.max(100, window.innerHeight - 200) })
+    }
+  }, [showFloatingPreview, dragPosition.x, dragPosition.y])
+
+  // Debounce advanced settings changes to improve performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAdvancedSettings(advancedSettings)
+    }, 100) // 100ms debounce for smooth interaction
+
+    return () => clearTimeout(timer)
+  }, [advancedSettings])
+
+  // Optimized handlers for advanced settings using useCallback
+  const updateAdvancedSetting = useCallback((key: keyof typeof advancedSettings, value: any) => {
+    setAdvancedSettings(prev => ({
+      ...prev,
+      [key]: value
+    }))
+  }, [])
+
   const dragRef = useRef<HTMLDivElement | null>(null)
   const mainPreviewRef = useRef<HTMLDivElement | null>(null)
 
@@ -98,20 +126,22 @@ export default function ConversionPanel({
   }, [])
 
   /**
-   * Intersection Observer to track main preview visibility
+   * Intersection Observer to track main preview visibility with 80% threshold
    */
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        setIsMainPreviewVisible(entry.isIntersecting)
+        // Consider preview visible only if 80% or more is visible
+        const isVisible = entry.intersectionRatio >= 0.8
+        setIsMainPreviewVisible(isVisible)
 
-        // Show floating preview if advanced is open and main preview is not visible
-        setShowFloatingPreview(isAdvancedOpen && !entry.isIntersecting && !!convertedSrc)
+        // Show floating preview if advanced is open and main preview is less than 80% visible
+        setShowFloatingPreview(isAdvancedOpen && !isVisible && !!convertedSrc)
       },
       {
-        threshold: 0.1, // Trigger when 10% of the element is visible
-        rootMargin: '0px 0px -50px 0px' // Add some margin to trigger earlier
+        threshold: [0, 0.25, 0.5, 0.75, 0.8, 1], // Multiple thresholds for accurate detection
+        rootMargin: '0px' // No margin for precise calculation
       }
     )
 
@@ -141,7 +171,7 @@ export default function ConversionPanel({
       // Auto-convert without counter increment
       handleConvert()
     }
-  }, [conversionMode, originalImage, cropArea, colorBlindMode, advancedSettings])
+  }, [conversionMode, originalImage, cropArea, colorBlindMode, debouncedAdvancedSettings])
 
   /**
    * Validates uploaded file for type and size constraints
@@ -229,12 +259,12 @@ export default function ConversionPanel({
       const conversionOptions: ConversionOptions = {
         colorBlind: colorBlindMode,
         customColors: {
-          darkColor: hexToRgb(advancedSettings.darkColor),
-          lightColor: hexToRgb(advancedSettings.lightColor),
-          darkIntensity: advancedSettings.darkIntensity,
-          lightIntensity: advancedSettings.lightIntensity,
-          contrast: advancedSettings.contrast,
-          brightness: advancedSettings.brightness,
+          darkColor: hexToRgb(debouncedAdvancedSettings.darkColor),
+          lightColor: hexToRgb(debouncedAdvancedSettings.lightColor),
+          darkIntensity: debouncedAdvancedSettings.darkIntensity,
+          lightIntensity: debouncedAdvancedSettings.lightIntensity,
+          contrast: debouncedAdvancedSettings.contrast,
+          brightness: debouncedAdvancedSettings.brightness,
         }
       }
 
@@ -492,13 +522,13 @@ export default function ConversionPanel({
               value={isAdvancedOpen ? "advanced-settings" : undefined}
               onValueChange={(value) => setIsAdvancedOpen(value === "advanced-settings")}
             >
-              <AccordionItem value="advanced-settings" className="border-0">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    <span className="font-medium">{t('conversion.advanced.title')}</span>
-                  </div>
-                </AccordionTrigger>
+                <AccordionItem value="advanced-settings" className="border-0">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Settings className="w-4 h-4" />
+                      <span className="font-medium">{t('conversion.advanced.title')}</span>
+                    </div>
+                  </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-4 pt-2">
                     {/* Gradient Colors */}
@@ -510,10 +540,7 @@ export default function ConversionPanel({
                           <div className="w-full">
                             <ColorPicker
                               value={advancedSettings.darkColor}
-                              onChange={(color) => setAdvancedSettings(prev => ({
-                                ...prev,
-                                darkColor: color
-                              }))}
+                              onChange={(color) => updateAdvancedSetting('darkColor', color)}
                               className="w-full"
                             />
                           </div>
@@ -523,10 +550,7 @@ export default function ConversionPanel({
                           <div className="w-full">
                             <ColorPicker
                               value={advancedSettings.lightColor}
-                              onChange={(color) => setAdvancedSettings(prev => ({
-                                ...prev,
-                                lightColor: color
-                              }))}
+                              onChange={(color) => updateAdvancedSetting('lightColor', color)}
                               className="w-full"
                             />
                           </div>
@@ -547,10 +571,7 @@ export default function ConversionPanel({
                           </div>
                           <Slider
                             value={[advancedSettings.darkIntensity]}
-                            onValueChange={([value]) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              darkIntensity: value
-                            }))}
+                            onValueChange={([value]) => updateAdvancedSetting('darkIntensity', value)}
                             min={0}
                             max={1}
                             step={0.01}
@@ -566,10 +587,7 @@ export default function ConversionPanel({
                           </div>
                           <Slider
                             value={[advancedSettings.lightIntensity]}
-                            onValueChange={([value]) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              lightIntensity: value
-                            }))}
+                            onValueChange={([value]) => updateAdvancedSetting('lightIntensity', value)}
                             min={0}
                             max={1}
                             step={0.01}
@@ -590,17 +608,16 @@ export default function ConversionPanel({
                               {advancedSettings.contrast.toFixed(2)}
                             </span>
                           </div>
-                          <Slider
-                            value={[advancedSettings.contrast]}
-                            onValueChange={([value]) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              contrast: value
-                            }))}
-                            min={0.5}
-                            max={2}
-                            step={0.01}
-                            className="w-full"
-                          />
+                          <div className="relative">
+                            <Slider
+                              value={[advancedSettings.contrast]}
+                              onValueChange={([value]) => updateAdvancedSetting('contrast', value)}
+                              min={0.5}
+                              max={2}
+                              step={0.01}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
@@ -609,17 +626,16 @@ export default function ConversionPanel({
                               {advancedSettings.brightness > 0 ? '+' : ''}{advancedSettings.brightness.toFixed(2)}
                             </span>
                           </div>
-                          <Slider
-                            value={[advancedSettings.brightness]}
-                            onValueChange={([value]) => setAdvancedSettings(prev => ({
-                              ...prev,
-                              brightness: value
-                            }))}
-                            min={-1}
-                            max={1}
-                            step={0.01}
-                            className="w-full"
-                          />
+                          <div className="relative">
+                            <Slider
+                              value={[advancedSettings.brightness]}
+                              onValueChange={([value]) => updateAdvancedSetting('brightness', value)}
+                              min={-1}
+                              max={1}
+                              step={0.01}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -692,16 +708,119 @@ export default function ConversionPanel({
         </div>
       </div>
 
-      {/* Floating Preview - Only show when advanced is open and main preview is not visible */}
+      {/* Optimized Draggable Floating Preview - Only show when advanced is open and main preview is less than 80% visible */}
       {showFloatingPreview && convertedSrc && (
-        <div className="fixed bottom-4 left-4 z-50 transition-all duration-300 ease-in-out">
-          <Card className="w-32 shadow-xl border border-gray-200/50 bg-white/95 backdrop-blur-sm">
+        <div
+          className="fixed z-50"
+          style={{
+            left: `${dragPosition.x}px`,
+            top: `${dragPosition.y}px`,
+            transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+            transition: isDragging ? 'none' : 'all 0.2s ease-out'
+          }}
+        >
+          <Card className={cn(
+            "w-32 shadow-xl border border-gray-200/50 bg-white/95 backdrop-blur-sm",
+            isDragging ? "shadow-2xl border-primary/30" : "hover:shadow-lg transition-shadow duration-200"
+          )}>
             <CardContent className="p-1">
-              <img
-                src={convertedSrc}
-                alt="Floating preview"
-                className="w-full h-auto rounded-md border border-gray-200 max-h-[80px] object-contain bg-gray-50/50"
-              />
+              <div
+                className="drag-handle cursor-move"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsDragging(true)
+
+                  const startX = e.clientX - dragPosition.x
+                  const startY = e.clientY - dragPosition.y
+                  let animationId: number | null = null
+
+                  const handleMouseMove = (e: MouseEvent) => {
+                    e.preventDefault()
+                    if (animationId) return // Skip if animation is already queued
+
+                    animationId = requestAnimationFrame(() => {
+                      const newX = Math.max(0, Math.min(window.innerWidth - 128, e.clientX - startX))
+                      const newY = Math.max(0, Math.min(window.innerHeight - 120, e.clientY - startY))
+                      setDragPosition({ x: newX, y: newY })
+                      animationId = null
+                    })
+                  }
+
+                  const handleMouseUp = () => {
+                    setIsDragging(false)
+                    if (animationId) {
+                      cancelAnimationFrame(animationId)
+                      animationId = null
+                    }
+                    document.removeEventListener('mousemove', handleMouseMove)
+                    document.removeEventListener('mouseup', handleMouseUp)
+                    // Re-enable scrolling
+                    document.body.style.overflow = ''
+                  }
+
+                  // Disable scrolling while dragging
+                  document.body.style.overflow = 'hidden'
+                  document.addEventListener('mousemove', handleMouseMove)
+                  document.addEventListener('mouseup', handleMouseUp)
+                }}
+                onTouchStart={(e) => {
+                  setIsDragging(true)
+
+                  const touch = e.touches[0]
+                  const startX = touch.clientX - dragPosition.x
+                  const startY = touch.clientY - dragPosition.y
+                  let animationId: number | null = null
+
+                  const handleTouchMove = (e: TouchEvent) => {
+                    if (animationId) return // Skip if animation is already queued
+
+                    const touch = e.touches[0]
+                    if (!touch) return
+
+                    // Prevent default scrolling only when we're actively dragging
+                    if (e.cancelable) {
+                      e.preventDefault()
+                    }
+
+                    animationId = requestAnimationFrame(() => {
+                      const newX = Math.max(0, Math.min(window.innerWidth - 128, touch.clientX - startX))
+                      const newY = Math.max(0, Math.min(window.innerHeight - 120, touch.clientY - startY))
+                      setDragPosition({ x: newX, y: newY })
+                      animationId = null
+                    })
+                  }
+
+                  const handleTouchEnd = () => {
+                    setIsDragging(false)
+                    if (animationId) {
+                      cancelAnimationFrame(animationId)
+                      animationId = null
+                    }
+                    document.removeEventListener('touchmove', handleTouchMove)
+                    document.removeEventListener('touchend', handleTouchEnd)
+                    document.removeEventListener('touchcancel', handleTouchEnd)
+                    // Re-enable scrolling
+                    document.body.style.overflow = ''
+                  }
+
+                  // Disable scrolling while dragging
+                  document.body.style.overflow = 'hidden'
+                  document.addEventListener('touchmove', handleTouchMove, { passive: false })
+                  document.addEventListener('touchend', handleTouchEnd)
+                  document.addEventListener('touchcancel', handleTouchEnd)
+                }}
+              >
+                <img
+                  src={convertedSrc}
+                  alt="Floating preview"
+                  className="w-full h-auto rounded-md border border-gray-200 max-h-[80px] object-contain bg-gray-50/50 pointer-events-none"
+                  draggable={false}
+                />
+              </div>
+              {/* Drag indicator */}
+              <div className="absolute top-1 right-1 opacity-40 hover:opacity-70 transition-opacity">
+              </div>
             </CardContent>
           </Card>
         </div>

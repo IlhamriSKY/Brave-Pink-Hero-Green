@@ -1,6 +1,8 @@
 import * as React from "react"
-import { useState, useCallback } from "react"
-import { ChromePicker, ColorResult } from 'react-color'
+import { useState, useCallback, useEffect } from "react"
+import { SketchPicker, ColorResult } from 'react-color'
+import { Palette } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,161 +16,160 @@ interface ColorPickerProps {
 
 const ColorPicker = React.forwardRef<HTMLInputElement, ColorPickerProps>(
   ({ value, onChange, className, disabled, ...props }, ref) => {
-    const [showPicker, setShowPicker] = useState(false)
+    const { t } = useTranslation()
+    const [currentColor, setCurrentColor] = useState(value)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [tempColor, setTempColor] = useState(value)
 
-    const handleTogglePicker = useCallback(() => {
-      if (!disabled) {
-        setShowPicker(prev => !prev)
+    // Update local color when prop changes
+    useEffect(() => {
+      setCurrentColor(value)
+      setTempColor(value)
+    }, [value])
+
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+      if (isModalOpen) {
+        document.body.style.overflow = 'hidden'
+        return () => {
+          document.body.style.overflow = ''
+        }
       }
-    }, [disabled])
+    }, [isModalOpen])
 
     const handleColorChange = useCallback((color: ColorResult) => {
-      onChange(color.hex)
-    }, [onChange])
-
-    const handleColorChangeComplete = useCallback((color: ColorResult) => {
-      onChange(color.hex)
-    }, [onChange])
-
-    const handleClose = useCallback(() => {
-      setShowPicker(false)
+      setTempColor(color.hex)
     }, [])
 
-    const handleHexChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleHexInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       const hexValue = e.target.value
-      if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue)) {
+      // Validate hex color format
+      if (/^#[0-9A-F]{0,6}$/i.test(hexValue)) {
+        setCurrentColor(hexValue)
         onChange(hexValue)
       }
     }, [onChange])
 
+    const openColorPicker = useCallback(() => {
+      if (!disabled) {
+        setTempColor(currentColor)
+        setIsModalOpen(true)
+      }
+    }, [disabled, currentColor])
+
+    const handleApplyColor = useCallback(() => {
+      setCurrentColor(tempColor)
+      onChange(tempColor)
+      setIsModalOpen(false)
+    }, [tempColor, onChange])
+
+    const handleCancelColor = useCallback(() => {
+      setTempColor(currentColor)
+      setIsModalOpen(false)
+    }, [currentColor])
+
+    const handleModalClose = useCallback(() => {
+      setTempColor(currentColor)
+      setIsModalOpen(false)
+    }, [currentColor])
+
     return (
-      <div className={cn("relative", className)}>
-        <div className="flex items-center gap-2 w-full">
-          {/* Color Swatch Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-8 h-8 p-0 border-2 border-border flex-shrink-0 hover:scale-105 transition-transform duration-150"
-            style={{ backgroundColor: value }}
-            onClick={handleTogglePicker}
-            disabled={disabled}
-          >
-            <span className="sr-only">Pick color</span>
-          </Button>
+      <>
+        <div className={cn("relative", className)}>
+          <div className="flex items-center gap-2 w-full">
+            {/* Color Preview Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-10 h-8 p-0 border-2 flex-shrink-0 relative overflow-hidden hover:scale-105 transition-transform duration-200"
+              onClick={openColorPicker}
+              disabled={disabled}
+              style={{ '--color-preview': currentColor } as React.CSSProperties}
+            >
+              <div className="w-full h-full flex items-center justify-center color-preview-bg rounded-sm">
+                {/* Fallback icon if color is transparent */}
+                {(!currentColor || currentColor === 'transparent') && (
+                  <Palette className="h-3 w-3 text-muted-foreground" />
+                )}
+              </div>
+            </Button>
 
-          {/* Hidden HTML5 Color Input for accessibility */}
-          <input
-            ref={ref}
-            type="color"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="sr-only"
-            {...props}
-          />
-
-          {/* Hex Input */}
-          <Input
-            type="text"
-            value={value.toUpperCase()}
-            onChange={handleHexChange}
-            className="flex-1 h-8 text-xs font-mono bg-background border-border"
-            placeholder="#000000"
-            disabled={disabled}
-          />
-        </div>
-
-        {/* React Color Picker - Direct SketchPicker without presets */}
-        {showPicker && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={handleClose}
+            {/* Visible input for ref forwarding */}
+            <input
+              ref={ref}
+              type="hidden"
+              value={currentColor}
+              disabled={disabled}
+              {...props}
             />
 
-            {/* Color Picker Popup - Compact & Styled */}
-            <div className="absolute top-full left-0 mt-2 z-50">
-              <div className="bg-background border border-border rounded-lg shadow-lg p-2 w-[200px]">
-                <style>{`
-                  .chrome-picker input {
-                    background-color: hsl(var(--background)) !important;
-                    border: 1px solid hsl(var(--border)) !important;
-                    border-radius: 4px !important;
-                    color: hsl(var(--foreground)) !important;
-                    font-size: 11px !important;
-                    padding: 2px 4px !important;
-                    box-shadow: none !important;
-                  }
-                  .chrome-picker label {
-                    color: hsl(var(--muted-foreground)) !important;
-                    font-size: 10px !important;
-                  }
-                  .chrome-picker .hue-horizontal {
-                    border-radius: 6px !important;
-                  }
-                  .chrome-picker .hue-horizontal .hue-pointer {
-                    border-radius: 50% !important;
-                    transform: translate(-6px, -2px) !important;
-                  }
-                  .chrome-picker .saturation-white {
-                    border-radius: 6px !important;
-                  }
-                  .chrome-picker .saturation-black {
-                    border-radius: 6px !important;
-                  }
-                  .chrome-picker .chrome-controls {
-                    display: flex !important;
-                    align-items: center !important;
-                  }
-                  .chrome-picker .chrome-color {
-                    display: none !important;
-                  }
-                  .chrome-picker .chrome-sliders {
-                    flex: 1 !important;
-                  }
-                  .chrome-picker .chrome-controls > div:first-child {
-                    display: none !important;
-                  }
-                  .chrome-picker .chrome-body .chrome-controls .chrome-color {
-                    display: none !important;
-                  }
-                  .chrome-picker div[style*="width: 22px"] {
-                    display: none !important;
-                  }
-                `}</style>
-                <ChromePicker
-                  color={value}
-                  onChange={handleColorChange}
-                  onChangeComplete={handleColorChangeComplete}
-                  disableAlpha={true}
-                  styles={{
-                    default: {
-                      picker: {
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        boxShadow: 'none',
-                        width: '100%',
-                        fontFamily: 'inherit',
+            {/* Hex Input */}
+            <Input
+              type="text"
+              value={currentColor}
+              onChange={handleHexInputChange}
+              className="flex-1 h-8 text-xs font-mono"
+              placeholder={t('colorPicker.hexPlaceholder')}
+              disabled={disabled}
+            />
+          </div>
+        </div>
+
+        {/* Color Picker Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop with blur */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={handleModalClose}
+            />
+
+            {/* Modal Content */}
+            <div className="relative bg-background border border-border rounded-xl shadow-2xl w-fit overflow-hidden">
+              <div className="p-4 space-y-4">
+                {/* Sketch Color Picker */}
+                <div className="flex justify-center">
+                  <SketchPicker
+                    color={tempColor}
+                    onChange={handleColorChange}
+                    disableAlpha={true}
+                    presetColors={[]}
+                    styles={{
+                      default: {
+                        picker: {
+                          background: 'transparent',
+                          border: 'none',
+                          boxShadow: 'none',
+                          fontFamily: 'inherit',
+                        },
                       },
-                      saturation: {
-                        borderRadius: '6px',
-                        height: '100px',
-                      },
-                      hue: {
-                        borderRadius: '6px',
-                        height: '8px',
-                        marginTop: '4px',
-                      },
-                    },
-                  }}
-                />
+                    }}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelColor}
+                  >
+                    {t('colorPicker.cancel')}
+                  </Button>
+                  <Button
+                    onClick={handleApplyColor}
+                    className="flex items-center gap-2"
+                    style={{ '--color-preview': tempColor } as React.CSSProperties}
+                  >
+                    <div className="w-4 h-4 rounded border border-white/20 color-preview-temp"></div>
+                    {t('colorPicker.apply')}
+                  </Button>
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )}
-      </div>
+      </>
     )
   }
 )

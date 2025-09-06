@@ -193,30 +193,40 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         pollingIntervalRef.current = null;
       }
 
-      // Adaptive polling: fast for first 10s (400ms), then 1000ms
+      // Optimized polling: slower intervals, longer fast duration
       const start = Date.now();
-      const fastDuration = 10000;
+      const fastDuration = 10000; // Increased to 10 seconds
       const loop = async () => {
         const elapsed = Date.now() - start;
-        const interval = elapsed < fastDuration ? 400 : 1000;
+        const interval = elapsed < fastDuration ? 800 : 2000; // Slower: 800ms fast, 2s slow
         try {
           const response = await fetch('/api/love/poll', {
-            headers: { 'X-Last-Event-Id': lastEventId.current },
+            headers: {
+              'X-Last-Event-Id': lastEventId.current,
+              'Cache-Control': 'no-cache',
+            },
+            signal: AbortSignal.timeout(5000), // 5 second timeout
           });
           if (response.ok) {
             const data = await response.json();
             if (data.events && data.events.length > 0) {
               debugLog(`[Polling] Received ${data.events.length} new events`);
-              for (const event of data.events) {
-                lastEventId.current = event.id;
-                enqueueRemoteBurst();
+              // Batch process events to avoid too many state updates
+              const eventCount = data.events.length;
+              lastEventId.current = data.events[eventCount - 1].id;
+
+              // Enqueue bursts for all events at once
+              for (let i = 0; i < Math.min(eventCount, 5); i++) { // Limit to 5 bursts max
+                setTimeout(() => enqueueRemoteBurst(), i * 200); // Stagger bursts
               }
             }
           } else {
             debugWarn('[Polling] HTTP request failed:', response.status);
           }
         } catch (error) {
-          debugError('[Polling] Request error:', error);
+          if (error instanceof Error && error.name !== 'AbortError') {
+            debugError('[Polling] Request error:', error);
+          }
         } finally {
           pollingIntervalRef.current = window.setTimeout(loop, interval) as unknown as number;
         }
@@ -282,7 +292,18 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     }, 200);
   }, [createParticlesAtPosition]);
 
+  // Debounced click handler to prevent spam
+  const [lastClickTime, setLastClickTime] = useState(0);
   const handleClick = async () => {
+    const now = Date.now();
+
+    // Prevent rapid clicking (500ms debounce)
+    if (now - lastClickTime < 500) {
+      debugLog('[Love] Click ignored - too rapid');
+      return;
+    }
+
+    setLastClickTime(now);
     debugLog('[Love] Button clicked');
     setIsClicking(true);
 
@@ -295,7 +316,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     createParticlesAtPosition(x, y, 12 + Math.floor(Math.random() * 7));
     debugLog('[Love] Instant particles triggered');
 
-    // Send to server in background (non-blocking)
+    // Send to server in background (non-blocking) with timeout
     try {
       debugLog('[Love] Sending click to server');
       const response = await fetch('/api/love/click', {
@@ -304,6 +325,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
+        signal: AbortSignal.timeout(3000), // 3 second timeout
       });
 
       if (response.ok) {
@@ -334,10 +356,10 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
     <div className={cn('relative inline-block', className)}>
       {/* Particles Canvas */}
       <div className="fixed inset-0 pointer-events-none z-50">
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {particles.map(particle => (
             <motion.div
-              key={particle.id}
+              key={`particle-${particle.id}-${particle.x}-${particle.y}`}
               className="absolute flex items-center justify-center pointer-events-none"
               style={{
                 left: particle.x - 8,
@@ -429,9 +451,10 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
         )}
       >
         {/* Pulse Animation Background */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isClicking && (
             <motion.div
+              key="pulse-animation"
               className={cn(
                 'absolute inset-0 rounded-md',
                 isJapanese ? 'bg-orange-400/20' : 'bg-red-400/20'
@@ -446,6 +469,7 @@ export const SimpleLoveButton: React.FC<SimpleLoveButtonProps> = ({ className })
 
         {/* Heart/Cat Icon with Animation */}
         <motion.div
+          key="icon-animation"
           animate={isClicking ? { scale: [1, 1.3, 1] } : {}}
           transition={{ duration: 0.3 }}
         >

@@ -67,6 +67,11 @@
     "dark": "ダークモード",
     "toggle": "テーマ切り替え"
   },
+  "colorPicker": {
+    "hexPlaceholder": "#000000",
+    "apply": "適用",
+    "cancel": "キャンセル"
+  },
   "errors": {
     "fileTypeError": "有効な画像ファイルを選択してください（JPG、PNG、WebP）",
     "fileSizeError": "ファイルサイズは10MB未満である必要があります",

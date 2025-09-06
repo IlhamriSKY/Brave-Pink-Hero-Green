@@ -67,6 +67,11 @@
     "dark": "Mode Gelap",
     "toggle": "Ganti Tema"
   },
+  "colorPicker": {
+    "hexPlaceholder": "#000000",
+    "apply": "Terapkan",
+    "cancel": "Batal"
+  },
   "errors": {
     "fileTypeError": "Pilih file gambar yang valid (JPG, PNG, WebP)",
     "fileSizeError": "Ukuran file harus kurang dari 10MB",

@@ -67,6 +67,11 @@
     "dark": "Dark Mode",
     "toggle": "Toggle Theme"
   },
+  "colorPicker": {
+    "hexPlaceholder": "#000000",
+    "apply": "Apply",
+    "cancel": "Cancel"
+  },
   "errors": {
     "fileTypeError": "Please select a valid image file (JPG, PNG, WebP)",
     "fileSizeError": "File size must be less than 10MB",

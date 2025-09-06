@@ -83,5 +83,10 @@
     "copyright": "© 2025 Brave Pink Hero Green. Hak cipta terpelihara.",
     "madeWith": "Dicipta dengan",
     "inspiredBy": "diilhamkan dari"
+  },
+  "colorPicker": {
+    "hexPlaceholder": "#000000",
+    "apply": "Gunakan",
+    "cancel": "Batal"
   }
 }
