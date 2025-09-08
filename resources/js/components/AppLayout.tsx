@@ -4,7 +4,6 @@ import { Heart, Cat } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { DotPattern } from '@/components/magicui/dot-pattern'
-import { useProcessing } from '@/contexts/ProcessingContext'
 import { SimpleLoveButton } from '@/components/SimpleLoveButton'
 import {
   NavigationMenu,
@@ -37,7 +36,6 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const { t, i18n } = useTranslation()
-    const { isProcessing } = useProcessing()
 
     return (
         <div className="relative min-h-screen bg-background transition-colors duration-300">
@@ -50,7 +48,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     cy={1}
                     cr={1}
                     glow={false}
-                    processing={isProcessing}
+                    processing={false}
                     className="text-pink-400/30 dark:text-muted-foreground/20"
                 />
             </div>

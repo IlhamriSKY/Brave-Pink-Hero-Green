@@ -7,8 +7,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
+/**
+ * LoveController
+ *
+ * Handles the "love button" feature that allows users to express appreciation
+ * for the application. Implements rate limiting and real-time broadcasting
+ * with polling fallback for cross-browser compatibility.
+ */
 class LoveController extends Controller
 {
+    /**
+     * Handle love button click events
+     *
+     * Processes love button clicks with rate limiting to prevent spam.
+     * Broadcasts events via WebSocket and caches them for polling fallback.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function click(Request $request)
     {
         $userId = $request->session()->getId();
@@ -59,6 +75,16 @@ class LoveController extends Controller
         }
     }
 
+    /**
+     * Poll for love button events (fallback for WebSocket)
+     *
+     * Provides polling-based fallback for environments where WebSocket
+     * connections are not available or reliable. Returns recent events
+     * since the last received event ID.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function poll(Request $request)
     {
         $lastEventId = $request->header('X-Last-Event-Id', '');

@@ -1,11 +1,12 @@
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
-import { ProcessingProvider } from './contexts/ProcessingContext'
 import './i18n' // Initialize i18n
 
 /**
  * Inertia app bootstrap
- * Use lazy page loading (code-splitting) for smaller initial bundles.
+ * 
+ * Initializes the React application with Inertia.js integration.
+ * Uses lazy page loading (code-splitting) for optimized bundle sizes.
  */
 createInertiaApp({
   resolve: (name: string) => {
@@ -20,10 +21,6 @@ createInertiaApp({
     if (!el) {
       throw new Error('Element not found')
     }
-    createRoot(el).render(
-      <ProcessingProvider>
-        <App {...props} />
-      </ProcessingProvider>
-    )
+    createRoot(el).render(<App {...props} />)
   },
 })

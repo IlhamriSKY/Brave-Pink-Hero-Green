@@ -8,8 +8,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * ProcessingStatsController
+ *
+ * Handles API endpoints for image processing statistics and counter management.
+ * Provides thread-safe counter increments with race condition protection.
+ */
 class ProcessingStatsController extends Controller
 {
+    /**
+     * Get current processing statistics
+     *
+     * Returns aggregated statistics about image processing operations
+     * including total processing counts and completion status.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getStats()
     {
         $stats = ProcessingCounter::getStats();
@@ -24,6 +38,13 @@ class ProcessingStatsController extends Controller
 
     /**
      * Increment the conversion counter with race condition protection
+     *
+     * Atomically increments the processing counter when a user successfully
+     * converts an image. Uses database transactions to prevent race conditions
+     * when multiple users convert images simultaneously.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function incrementCounter(Request $request)
     {

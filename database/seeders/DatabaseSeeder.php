@@ -2,25 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * Main database seeder class
+ *
+ * Seeds the application's database with initial data for production use.
+ * Currently only seeds processing counter statistics for the image conversion feature.
+ */
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed the application's database with production-ready data
+     *
+     * @return void
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-        // Seed processing counter with 21 completed conversions
+        // Seed processing counter with initial conversion statistics
         $this->call(ProcessingCounterSeeder::class);
     }
 }

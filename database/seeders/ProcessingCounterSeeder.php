@@ -6,10 +6,21 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+/**
+ * ProcessingCounterSeeder
+ * 
+ * Seeds the database with sample image processing records and statistics.
+ * Creates realistic conversion history for demonstration and testing purposes.
+ */
 class ProcessingCounterSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds
+     * 
+     * Creates 21 completed image processing records with realistic
+     * timestamps and updates the global processing statistics.
+     * 
+     * @return void
      */
     public function run(): void
     {

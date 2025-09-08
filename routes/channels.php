@@ -1,19 +1,20 @@
 <?php
 
+/**
+ * Broadcast Channels
+ *
+ * Defines WebSocket broadcast channels for real-time features.
+ * All channels are public since the app doesn't require user authentication.
+ */
+
 use Illuminate\Support\Facades\Broadcast;
 
-/*
-|--------------------------------------------------------------------------
-| Broadcast Channels
-|--------------------------------------------------------------------------
-|
-| Here you may register all of the event broadcasting channels that your
-| application supports. The given channel authorization callbacks are
-| used to check if an authenticated user can listen to the channel.
-|
-*/
-
-// Public channel for love counter - no authentication required
+/**
+ * Public love counter channel
+ *
+ * Broadcasts love button click events to all connected clients.
+ * No authentication required - public feature for user engagement.
+ */
 Broadcast::channel('love-counter', function () {
     return true; // Allow all users to listen to love counter updates
 });

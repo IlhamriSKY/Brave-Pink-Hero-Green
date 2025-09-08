@@ -278,6 +278,14 @@ export default function ConversionPanel({
     }
   }
 
+  /**
+   * Handles crop area application and image processing
+   *
+   * Applies the selected crop area to the original image, creates a circular crop,
+   * and immediately processes it with the current conversion settings and advanced options.
+   *
+   * @param areaPixels - The crop area coordinates and dimensions in pixels
+   */
   const handleApplyCrop = async (areaPixels: { x: number; y: number; width: number; height: number }) => {
     if (!originalImage) return
     try {
@@ -287,7 +295,21 @@ export default function ConversionPanel({
       // Immediately convert using this cropped base to avoid state race
       const tmp = new Image()
       await new Promise<void>((res, rej) => { tmp.onload = () => res(); tmp.onerror = () => rej(new Error('failed')); tmp.src = before })
-      const result = await applyConversion(tmp, conversionMode, { colorBlind: colorBlindMode })
+
+      // Prepare conversion options with advanced settings (same as handleConvert)
+      const conversionOptions: ConversionOptions = {
+        colorBlind: colorBlindMode,
+        customColors: {
+          darkColor: hexToRgb(debouncedAdvancedSettings.darkColor),
+          lightColor: hexToRgb(debouncedAdvancedSettings.lightColor),
+          darkIntensity: debouncedAdvancedSettings.darkIntensity,
+          lightIntensity: debouncedAdvancedSettings.lightIntensity,
+          contrast: debouncedAdvancedSettings.contrast,
+          brightness: debouncedAdvancedSettings.brightness,
+        }
+      }
+
+      const result = await applyConversion(tmp, conversionMode, conversionOptions)
       setOriginalCroppedSrc(before)
       setConvertedSrc(result)
       setIsCropping(false)
